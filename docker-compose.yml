@@ -49,8 +49,8 @@ services:
       - mongodb-data:/data/db
       - mongodb-config:/data/configdb
 
-  turknet-messaging-service:
-    image: turknet-messaging-service:latest
+  messaging-command-service:
+    image: messaging-command-service:latest
     depends_on:
       - kafka
       - mongodb
