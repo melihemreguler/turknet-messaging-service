@@ -30,7 +30,7 @@ services:
     depends_on:
       - kafka
     ports:
-      - "8081:8080"
+      - "8082:8080"
     environment:
       KAFKA_CLUSTERS_0_NAME: local
       KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
@@ -56,6 +56,17 @@ services:
       - mongodb
     ports:
       - "8080:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+    restart: unless-stopped
+
+  messaging-writer-service:
+    image: messaging-writer-service:latest
+    depends_on:
+      - kafka
+      - mongodb
+    ports:
+      - "8081:8081"
     environment:
       - SPRING_PROFILES_ACTIVE=docker
     restart: unless-stopped
