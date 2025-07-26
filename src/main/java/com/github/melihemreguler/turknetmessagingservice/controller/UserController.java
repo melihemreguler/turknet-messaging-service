@@ -2,7 +2,7 @@ package com.github.melihemreguler.turknetmessagingservice.controller;
 
 import com.github.melihemreguler.turknetmessagingservice.dto.UserDto;
 import com.github.melihemreguler.turknetmessagingservice.model.ApiResponse;
-import com.github.melihemreguler.turknetmessagingservice.model.UserRegistrationRequest;
+import com.github.melihemreguler.turknetmessagingservice.model.UserRegisterRequest;
 import com.github.melihemreguler.turknetmessagingservice.model.LoginRequest;
 import com.github.melihemreguler.turknetmessagingservice.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -22,7 +22,7 @@ public class UserController {
     private final UserService userService;
     
     @PostMapping("/register")
-    public ResponseEntity<ApiResponse<UserDto>> registerUser(@RequestBody @Valid UserRegistrationRequest request) {
+    public ResponseEntity<ApiResponse<UserDto>> registerUser(@RequestBody @Valid UserRegisterRequest request) {
         try {
             log.info("User registration request received for username: {}", request.username());
             UserDto user = userService.registerUser(request);
