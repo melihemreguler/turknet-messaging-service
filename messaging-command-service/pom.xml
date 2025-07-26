@@ -9,10 +9,10 @@
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
     <groupId>com.github.melihemreguler</groupId>
-    <artifactId>turknet-messaging-service</artifactId>
+    <artifactId>messaging-command-service</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>turknet-messaging-service</name>
-    <description>turknet-messaging-service</description>
+    <name>messaging-command-service</name>
+    <description>messaging-command-service</description>
     <url/>
     <licenses>
         <license/>
@@ -120,7 +120,7 @@
                         <image>eclipse-temurin:17-jre-alpine</image>
                     </from>
                     <to>
-                        <image>turknet-messaging-service:latest</image>
+                        <image>messaging-command-service:latest</image>
                     </to>
                     <container>
                         <ports>
