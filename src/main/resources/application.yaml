@@ -1,0 +1,40 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: turknet-messaging-service
+
+  # MongoDB configuration (default - localhost)
+  data:
+    mongodb:
+      uri: mongodb://admin:password@localhost:27017/turknet-messaging-db?authSource=admin
+
+  # Kafka configuration (default - localhost)
+  kafka:
+    bootstrap-servers: localhost:9092
+    consumer:
+      group-id: turknet-messaging-group
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+
+kafka:
+  topics:
+    messages: turknet-messages
+    activity-logs: turknet-activity-logs
+
+---
+# Docker profile configuration
+spring:
+  config:
+    activate:
+      on-profile: docker
+  data:
+    mongodb:
+      uri: mongodb://admin:password@mongodb:27017/turknet-messaging-db?authSource=admin
+  kafka:
+    bootstrap-servers: kafka:9092
