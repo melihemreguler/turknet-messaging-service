@@ -1,6 +1,7 @@
 package com.github.melihemreguler.turknetmessagingservice.exception;
 
 import com.github.melihemreguler.turknetmessagingservice.model.ApiResponse;
+import com.github.melihemreguler.turknetmessagingservice.model.ValidationErrorResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -17,7 +18,7 @@ import java.util.Map;
 public class GlobalExceptionHandler {
     
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ApiResponse<Map<String, String>>> handleValidationExceptions(
+    public ResponseEntity<ApiResponse<ValidationErrorResponse>> handleValidationExceptions(
             MethodArgumentNotValidException ex) {
         
         Map<String, String> errors = new HashMap<>();
@@ -29,7 +30,7 @@ public class GlobalExceptionHandler {
         
         log.warn("Validation error: {}", errors);
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(ApiResponse.error("Validation failed"));
+                .body(ApiResponse.error("Validation failed", ValidationErrorResponse.create(errors)));
     }
     
     @ExceptionHandler(IllegalArgumentException.class)

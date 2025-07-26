@@ -3,13 +3,13 @@ package com.github.melihemreguler.turknetmessagingservice.service;
 import com.github.melihemreguler.turknetmessagingservice.dto.MessageDto;
 import com.github.melihemreguler.turknetmessagingservice.dto.UserDto;
 import com.github.melihemreguler.turknetmessagingservice.model.MessageRequest;
+import com.github.melihemreguler.turknetmessagingservice.model.MessageCommand;
 import com.github.melihemreguler.turknetmessagingservice.repository.MessageRepository;
 import com.github.melihemreguler.turknetmessagingservice.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
 import java.util.*;
 import java.util.UUID;
 
@@ -38,15 +38,8 @@ public class MessageService {
         // Generate a temporary message ID for immediate response
         String tempMessageId = UUID.randomUUID().toString();
         
-        Map<String, Object> messageCommand = new HashMap<>();
-        messageCommand.put("command", "SEND_MESSAGE");
-        messageCommand.put("messageId", tempMessageId);
-        messageCommand.put("threadId", threadId);
-        messageCommand.put("sender", sender);
-        messageCommand.put("recipient", recipient);
-        messageCommand.put("content", content);
-        messageCommand.put("timestamp", LocalDateTime.now());
-        messageCommand.put("status", "pending");
+        MessageCommand messageCommand = MessageCommand.create(
+            tempMessageId, threadId, sender, recipient, content);
         
         kafkaProducerService.sendMessageCommand(messageCommand);
         
