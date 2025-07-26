@@ -2,6 +2,7 @@ package com.github.melihemreguler.turknetmessagingservice.controller;
 
 import com.github.melihemreguler.turknetmessagingservice.dto.MessageDto;
 import com.github.melihemreguler.turknetmessagingservice.model.ApiResponse;
+import com.github.melihemreguler.turknetmessagingservice.model.ConversationRequest;
 import com.github.melihemreguler.turknetmessagingservice.model.MessageRequest;
 import com.github.melihemreguler.turknetmessagingservice.service.MessageService;
 import jakarta.validation.Valid;
@@ -43,14 +44,13 @@ public class MessageController {
         }
     }
     
-    @GetMapping("/conversation")
+    @PostMapping("/conversation")
     public ResponseEntity<ApiResponse<List<MessageDto>>> getConversation(
-            @RequestParam String user1,
-            @RequestParam String user2) {
+            @RequestBody @Valid ConversationRequest request) {
         
         try {
-            log.info("Fetching conversation between {} and {}", user1, user2);
-            List<MessageDto> messages = messageService.getConversation(user1, user2);
+            log.info("Fetching conversation between {} and {}", request.user1(), request.user2());
+            List<MessageDto> messages = messageService.getConversation(request.user1(), request.user2());
             
             return ResponseEntity.ok(ApiResponse.success("Conversation retrieved successfully", messages));
         } catch (Exception e) {
