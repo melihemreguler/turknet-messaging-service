@@ -50,7 +50,7 @@ services:
       - mongodb-config:/data/configdb
 
   turknet-messaging-service:
-    build: .
+    image: turknet-messaging-service:latest
     depends_on:
       - kafka
       - mongodb
