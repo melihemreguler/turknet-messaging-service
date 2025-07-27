@@ -79,25 +79,25 @@ public class UserService {
         
         kafkaProducerService.sendUserCommand(activityEvent);
         
-        return new AuthenticationResult(result.isSuccessful(), result.getFailureReason(), sessionToken);
+        return new AuthenticationResult(result.isSuccessful(), result.getFailureReason(), sessionToken, userId);
     }
     
     private AuthenticationResult validateUserCredentials(Optional<UserDto> userOpt, String password, String username) {
         if (userOpt.isEmpty()) {
             String failureReason = "User not found";
             log.warn("Authentication failed for user {}: {}", username, failureReason);
-            return new AuthenticationResult(false, failureReason, null);
+            return new AuthenticationResult(false, failureReason, null, null);
         }
         
         UserDto user = userOpt.get();
         if (!verifyPassword(password, user.getPasswordHash())) {
             String failureReason = "Invalid password";
             log.warn("Authentication failed for user {}: {}", username, failureReason);
-            return new AuthenticationResult(false, failureReason, null);
+            return new AuthenticationResult(false, failureReason, null, user.getId());
         }
         
         log.info("User authenticated successfully: {}", username);
-        return new AuthenticationResult(true, null, null);
+        return new AuthenticationResult(true, null, null, user.getId());
     }
     
     private boolean verifyPassword(String rawPassword, String hashedPassword) {
@@ -113,11 +113,13 @@ public class UserService {
         private final boolean successful;
         private final String failureReason;
         private final String sessionToken;
+        private final String userId;
         
-        public AuthenticationResult(boolean successful, String failureReason, String sessionToken) {
+        public AuthenticationResult(boolean successful, String failureReason, String sessionToken, String userId) {
             this.successful = successful;
             this.failureReason = failureReason;
             this.sessionToken = sessionToken;
+            this.userId = userId;
         }
         
         public boolean isSuccessful() {
@@ -130,6 +132,10 @@ public class UserService {
         
         public String getSessionToken() {
             return sessionToken;
+        }
+        
+        public String getUserId() {
+            return userId;
         }
     }
 }
