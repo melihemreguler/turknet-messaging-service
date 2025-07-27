@@ -69,6 +69,24 @@ public class SessionService {
             return Optional.empty();
         }
     }
+
+    public Optional<SessionDto> validateSession(String sessionToken, String userId) {
+        if (sessionToken == null || sessionToken.trim().isEmpty() || userId == null || userId.trim().isEmpty()) {
+            return Optional.empty();
+        }
+        
+        try {
+            // Find sessions only for the specific user and match the hashed token
+            return sessionRepository.findByUserId(userId).stream()
+                .filter(session -> !session.isExpired())
+                .filter(session -> passwordEncoder.matches(sessionToken, session.getHashedSessionToken()))
+                .findFirst();
+                
+        } catch (Exception e) {
+            log.error("Error validating session for user {}: {}", userId, e.getMessage(), e);
+            return Optional.empty();
+        }
+    }
     
     public void invalidateSession(String sessionToken) {
         try {
