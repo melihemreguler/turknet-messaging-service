@@ -14,6 +14,9 @@ public class UserActivityEvent {
     
     private String command;
     private String username;
+    private String userId;
+    private String email;
+    private String passwordHash;
     private String ipAddress;
     private String userAgent;
     private boolean successful;

@@ -22,48 +22,68 @@ public class MessageService {
     private final UserRepository userRepository;
     private final KafkaProducerService kafkaProducerService;
     
-    public MessageDto sendMessage(String senderUsername, MessageRequest request) {
-        String sender = senderUsername.trim().toLowerCase();
+    public MessageDto sendMessage(String senderId, MessageRequest request) {
         String recipient = request.getTrimmedRecipient();
         String content = request.getTrimmedContent();
+        
+        // Get sender user info
+        Optional<UserDto> senderUser = userRepository.findById(senderId);
+        if (senderUser.isEmpty()) {
+            throw new IllegalArgumentException("Sender not found: " + senderId);
+        }
         
         Optional<UserDto> recipientUser = userRepository.findByUsername(recipient);
         if (recipientUser.isEmpty()) {
             throw new IllegalArgumentException("Recipient not found: " + recipient);
         }
         
+        String senderUsername = senderUser.get().getUsername();
+        
         // Create thread ID (sorted usernames to ensure consistency)
-        String threadId = createThreadId(sender, recipient);
+        String threadId = createThreadId(senderUsername, recipient);
         
         // Generate a temporary message ID for immediate response
         String tempMessageId = UUID.randomUUID().toString();
         
         MessageCommand messageCommand = MessageCommand.create(
-            tempMessageId, threadId, sender, recipient, content);
+            tempMessageId, threadId, senderUsername, recipient, content);
         
         kafkaProducerService.sendMessageCommand(messageCommand);
         
-        log.info("Message command sent to Kafka from {} to {} in thread {}", sender, recipient, threadId);
+        log.info("Message command sent to Kafka from {} to {} in thread {}", senderUsername, recipient, threadId);
         
 
-        MessageDto tempMessage = new MessageDto(threadId, sender, content);
+        MessageDto tempMessage = new MessageDto(threadId, senderUsername, content);
         tempMessage.setId(tempMessageId);
-        tempMessage.setStatus("pending");
         
         return tempMessage;
     }
     
-    public List<MessageDto> getConversation(String username1, String username2) {
-        String user1 = username1.trim().toLowerCase();
-        String user2 = username2.trim().toLowerCase();
-        String threadId = createThreadId(user1, user2);
+    public List<MessageDto> getConversation(String userId1, String userId2) {
+        // Get usernames from userIds
+        Optional<UserDto> user1Opt = userRepository.findById(userId1);
+        Optional<UserDto> user2Opt = userRepository.findById(userId2);
+        
+        if (user1Opt.isEmpty() || user2Opt.isEmpty()) {
+            throw new IllegalArgumentException("One or both users not found");
+        }
+        
+        String username1 = user1Opt.get().getUsername().trim().toLowerCase();
+        String username2 = user2Opt.get().getUsername().trim().toLowerCase();
+        String threadId = createThreadId(username1, username2);
         
         return messageRepository.findByThreadIdOrderByTimestampAsc(threadId);
     }
     
-    public List<MessageDto> getUserMessages(String username) {
-        String user = username.trim().toLowerCase();
-        return messageRepository.findBySenderOrderByTimestampDesc(user);
+    public List<MessageDto> getUserMessages(String userId) {
+        // Get username from userId
+        Optional<UserDto> userOpt = userRepository.findById(userId);
+        if (userOpt.isEmpty()) {
+            throw new IllegalArgumentException("User not found: " + userId);
+        }
+        
+        String username = userOpt.get().getUsername().trim().toLowerCase();
+        return messageRepository.findBySenderOrderByTimestampDesc(username);
     }
     
     private String createThreadId(String username1, String username2) {

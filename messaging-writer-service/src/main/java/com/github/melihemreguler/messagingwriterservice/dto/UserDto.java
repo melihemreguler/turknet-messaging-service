@@ -5,22 +5,27 @@ import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.mongodb.core.index.Indexed;
 
 import java.time.LocalDateTime;
 
-@Document(collection = "messages")
+@Document(collection = "users")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class MessageDto {
-
+public class UserDto {
+    
     @Id
     private String id;
-
-    private String threadId;
-    private String sender;
-    private String recipient;
-    private String content;
-    private LocalDateTime timestamp;
-    private String status;
+    
+    @Indexed(unique = true)
+    private String username;
+    
+    private String email;
+    
+    private String passwordHash;
+    
+    private LocalDateTime createdAt;
+    
+    private LocalDateTime updatedAt;
 }

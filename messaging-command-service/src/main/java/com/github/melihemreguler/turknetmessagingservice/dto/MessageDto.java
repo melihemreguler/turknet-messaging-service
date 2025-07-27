@@ -28,21 +28,10 @@ public class MessageDto {
 
     private LocalDateTime timestamp;
 
-    private String status;
-
     public MessageDto(String threadId, String sender, String content) {
         this.threadId = threadId;
         this.sender = sender;
         this.content = content;
         this.timestamp = LocalDateTime.now();
-        this.status = "sent";
-    }
-
-    public void markAsDelivered() {
-        this.status = "delivered";
-    }
-
-    public void markAsRead() {
-        this.status = "read";
     }
 }

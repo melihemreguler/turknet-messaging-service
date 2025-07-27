@@ -2,6 +2,7 @@ package com.github.melihemreguler.turknetmessagingservice.controller;
 
 import com.github.melihemreguler.turknetmessagingservice.model.HealthResponse;
 import com.github.melihemreguler.turknetmessagingservice.model.ReadinessResponse;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.admin.AdminClient;
@@ -28,10 +29,6 @@ public class HealthController {
         return ResponseEntity.ok(HealthResponse.up("turknet-messaging-service"));
     }
     
-    @GetMapping("/ping")
-    public ResponseEntity<String> ping() {
-        return ResponseEntity.ok("pong");
-    }
     
     @GetMapping("/ready")
     public ResponseEntity<ReadinessResponse> readiness() {
