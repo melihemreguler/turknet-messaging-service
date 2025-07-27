@@ -10,15 +10,13 @@ spring:
   application:
     name: turknet-messaging-service
   profiles:
-    active: ${SPRING_PROFILES_ACTIVE:local}
+    active: local
 
-  # MongoDB configuration (default - localhost)
   data:
     mongodb:
       uri: mongodb://admin:password@localhost:27017/turknet-messaging-db?authSource=admin
       database: turknet-messaging-db
 
-  # Kafka configuration (default - localhost)
   kafka:
     bootstrap-servers: localhost:29092
     consumer:
@@ -31,6 +29,16 @@ spring:
       value-serializer: org.apache.kafka.common.serialization.StringSerializer
       acks: all
       retries: 3
+app:
+  kafka:
+    topics:
+      # Command topics - for sending commands to consumer services
+      user-commands: ${USER_COMMANDS_TOPIC:user_commands_topic}
+      message-commands: ${MESSAGE_COMMANDS_TOPIC:message_commands_topic}
+      session-commands: ${SESSION_COMMANDS_TOPIC:session_commands_topic}
+  session:
+    expiration-hours: ${SESSION_EXPIRATION_HOURS:24}
+    cleanup-interval-minutes: ${SESSION_CLEANUP_INTERVAL_MINUTES:60}
 
 logging:
   level:
@@ -70,12 +78,6 @@ management:
     livenessstate:
       enabled: true
 
-messaging:
-  topics:
-    # Command topics - for sending commands to consumer services
-    user-commands: ${USER_COMMANDS_TOPIC:user_commands_topic}
-    message-commands: ${MESSAGE_COMMANDS_TOPIC:message_commands_topic}
-
 ---
 # Docker profile configuration
 spring:
@@ -87,3 +89,52 @@ spring:
       uri: mongodb://admin:password@mongodb:27017/turknet-messaging-db?authSource=admin
   kafka:
     bootstrap-servers: kafka:9092
+
+app:
+  kafka:
+    topics:
+      # Command topics - for sending commands to consumer services
+      user-commands: ${USER_COMMANDS_TOPIC:user_commands_topic}
+      message-commands: ${MESSAGE_COMMANDS_TOPIC:message_commands_topic}
+      session-commands: ${SESSION_COMMANDS_TOPIC:session_commands_topic}
+  session:
+    expiration-hours: ${SESSION_EXPIRATION_HOURS:24}
+    cleanup-interval-minutes: ${SESSION_CLEANUP_INTERVAL_MINUTES:60}
+
+logging:
+  level:
+    root: INFO
+    com.github.melihemreguler.turknetmessagingservice: INFO  # Production'da DEBUG yerine INFO
+
+springdoc:
+  swagger-ui:
+    enabled: ${SWAGGER_ENABLED:false}  # Production'da varsayılan olarak kapalı
+    path: /api/swagger-ui.html
+  api-docs:
+    enabled: ${SWAGGER_ENABLED:false}
+    path: /v3/api-docs
+
+# Actuator configuration for health checks
+management:
+  server:
+    port: 8080
+  endpoints:
+    web:
+      base-path: /actuator
+      exposure:
+        include: health,info,readiness,liveness  # Production'da sınırlı exposure
+  endpoint:
+    health:
+      show-details: ${HEALTH_SHOW_DETAILS:when-authorized}  # Production'da güvenli
+      show-components: ${HEALTH_SHOW_COMPONENTS:when-authorized}
+      probes:
+        enabled: true
+    readiness:
+      enabled: true
+    liveness:
+      enabled: true
+  health:
+    readinessstate:
+      enabled: true
+    livenessstate:
+      enabled: true
