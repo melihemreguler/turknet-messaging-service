@@ -44,4 +44,14 @@ public class KafkaProducerService {
             log.error("Error serializing user command: {}", e.getMessage(), e);
         }
     }
+    
+    public void sendSessionCommand(Object sessionCommand) {
+        try {
+            String jsonMessage = objectMapper.writeValueAsString(sessionCommand);
+            kafkaTemplate.send(messagingConfig.getSessionCommands(), jsonMessage);
+            log.debug("Session command sent to topic: {}", messagingConfig.getSessionCommands());
+        } catch (JsonProcessingException e) {
+            log.error("Error serializing session command: {}", e.getMessage(), e);
+        }
+    }
 }
