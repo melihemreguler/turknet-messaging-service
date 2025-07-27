@@ -20,15 +20,14 @@ spring:
       group-id: messaging-writer-group
       auto-offset-reset: earliest
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
-      properties:
-        spring.json.trusted.packages: "*"
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
 
 app:
   kafka:
     topics:
       message-commands: message_commands_topic
       user-commands: user_commands_topic
+      session-commands: session_commands_topic
 
 server:
   port: 8081
@@ -65,3 +64,8 @@ spring:
   
   kafka:
     bootstrap-servers: kafka:9092
+    consumer:
+      group-id: messaging-writer-group
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
