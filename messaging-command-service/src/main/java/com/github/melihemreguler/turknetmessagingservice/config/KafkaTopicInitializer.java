@@ -37,6 +37,11 @@ public class KafkaTopicInitializer {
                 TopicBuilder.name(messagingConfig.getMessageCommands())
                     .partitions(3)
                     .replicas(1)
+                    .build(),
+                    
+                TopicBuilder.name(messagingConfig.getSessionCommands())
+                    .partitions(3)
+                    .replicas(1)
                     .build()
             );
             
