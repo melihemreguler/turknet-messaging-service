@@ -21,6 +21,7 @@ public class SessionTokenInterceptor implements HandlerInterceptor {
     private final SessionService sessionService;
     private final UserService userService;
     private static final String SESSION_TOKEN_HEADER = "X-Session-Token";
+    private static final String USER_ID_HEADER = "X-User-Id";
     private static final String USER_ID_ATTRIBUTE = "currentUserId";
     private static final String USERNAME_ATTRIBUTE = "currentUser";
     
@@ -34,6 +35,7 @@ public class SessionTokenInterceptor implements HandlerInterceptor {
         }
         
         String sessionToken = request.getHeader(SESSION_TOKEN_HEADER);
+        String userId = request.getHeader(USER_ID_HEADER);
         
         if (sessionToken == null || sessionToken.trim().isEmpty()) {
             log.warn("No session token provided for protected endpoint: {}", requestURI);
@@ -43,7 +45,15 @@ public class SessionTokenInterceptor implements HandlerInterceptor {
             return false;
         }
         
-        Optional<SessionDto> sessionOpt = sessionService.validateSession(sessionToken);
+        if (userId == null || userId.trim().isEmpty()) {
+            log.warn("No user ID provided for protected endpoint: {}", requestURI);
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.getWriter().write("{\"error\": \"User ID required\"}");
+            response.setContentType("application/json");
+            return false;
+        }
+        
+        Optional<SessionDto> sessionOpt = sessionService.validateSession(sessionToken, userId);
         
         if (sessionOpt.isEmpty()) {
             log.warn("Invalid or expired session token for endpoint: {}", requestURI);
@@ -57,8 +67,9 @@ public class SessionTokenInterceptor implements HandlerInterceptor {
         request.setAttribute(USER_ID_ATTRIBUTE, session.getUserId());
         request.setAttribute(USERNAME_ATTRIBUTE, session.getUserId()); // Use userId as currentUser
         
-        // Add session token back to response header
+        // Add session token and userId back to response headers
         response.addHeader(SESSION_TOKEN_HEADER, sessionToken);
+        response.addHeader(USER_ID_HEADER, userId);
         
         log.debug("Session validated for user ID: {} on endpoint: {}", session.getUserId(), requestURI);
         return true;
