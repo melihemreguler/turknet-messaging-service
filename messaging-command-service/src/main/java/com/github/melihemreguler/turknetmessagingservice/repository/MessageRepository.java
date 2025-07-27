@@ -12,6 +12,4 @@ public interface MessageRepository extends MongoRepository<MessageDto, String> {
     List<MessageDto> findByThreadIdOrderByTimestampAsc(String threadId);
     
     List<MessageDto> findBySenderOrderByTimestampDesc(String sender);
-    
-    List<MessageDto> findByThreadIdAndSenderOrderByTimestampAsc(String threadId, String sender);
 }
