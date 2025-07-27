@@ -23,21 +23,4 @@ public class MessageDto {
     private String content;
     private LocalDateTime timestamp;
     private String status;
-
-    public MessageDto(String threadId, String sender, String content) {
-        this.threadId = threadId;
-        this.sender = sender;
-        this.content = content;
-        this.timestamp = LocalDateTime.now();
-        this.status = "sent";
-    }
-
-    public MessageDto(String threadId, String sender, String recipient, String content) {
-        this.threadId = threadId;
-        this.sender = sender;
-        this.recipient = recipient;
-        this.content = content;
-        this.timestamp = LocalDateTime.now();
-        this.status = "sent";
-    }
 }
