@@ -3,22 +3,28 @@ package com.github.melihemreguler.messagingwriterservice.service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.github.melihemreguler.messagingwriterservice.dto.ActivityLogDto;
+import com.github.melihemreguler.messagingwriterservice.dto.UserDto;
 import com.github.melihemreguler.messagingwriterservice.model.UserActivityEvent;
 import com.github.melihemreguler.messagingwriterservice.repository.ActivityLogRepository;
+import com.github.melihemreguler.messagingwriterservice.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
+
+import java.time.LocalDateTime;
 
 @Service
 @Slf4j
 public class UserActivityConsumerService {
 
     private final ActivityLogRepository activityLogRepository;
+    private final UserRepository userRepository;
     private final ObjectMapper objectMapper;
 
-    public UserActivityConsumerService(ActivityLogRepository activityLogRepository) {
+    public UserActivityConsumerService(ActivityLogRepository activityLogRepository, UserRepository userRepository) {
         this.activityLogRepository = activityLogRepository;
+        this.userRepository = userRepository;
         this.objectMapper = new ObjectMapper();
         this.objectMapper.registerModule(new JavaTimeModule());
     }
@@ -30,10 +36,10 @@ public class UserActivityConsumerService {
         try {
             UserActivityEvent event = objectMapper.readValue(message, UserActivityEvent.class);
             
-            if ("LOG_USER_ACTIVITY".equals(event.getCommand())) {
-                processUserActivityEvent(event);
-            } else {
-                log.warn("Unknown user activity command: {}", event.getCommand());
+            switch (event.getCommand()) {
+                case "LOG_USER_ACTIVITY" -> processUserActivityEvent(event);
+                case "USER_REGISTERED" -> processUserRegistrationEvent(event);
+                default -> log.warn("Unknown user activity command: {}", event.getCommand());
             }
         } catch (Exception e) {
             log.error("Error processing user activity: {}", e.getMessage(), e);
@@ -42,7 +48,7 @@ public class UserActivityConsumerService {
 
     private void processUserActivityEvent(UserActivityEvent event) {
         ActivityLogDto activityLog = new ActivityLogDto();
-        activityLog.setUsername(event.getUsername());
+        activityLog.setUserId(event.getUserId());
         activityLog.setIpAddress(event.getIpAddress());
         activityLog.setUserAgent(event.getUserAgent());
         activityLog.setSuccessful(event.isSuccessful());
@@ -51,7 +57,40 @@ public class UserActivityConsumerService {
         activityLog.setAction("LOGIN_ATTEMPT");
 
         ActivityLogDto savedLog = activityLogRepository.save(activityLog);
-        log.info("Activity log saved: {} for user {} - Success: {}", 
-                savedLog.getId(), savedLog.getUsername(), savedLog.isSuccessful());
+        log.info("Activity log saved: {} for user ID: {} - Success: {}", 
+                savedLog.getId(), savedLog.getUserId(), savedLog.isSuccessful());
+    }
+    
+    private void processUserRegistrationEvent(UserActivityEvent event) {
+        try {
+            // Save user to database
+            UserDto user = new UserDto();
+            user.setId(event.getUserId());
+            user.setUsername(event.getUsername());
+            user.setEmail(event.getEmail());
+            user.setPasswordHash(event.getPasswordHash());
+            user.setCreatedAt(event.getTimestamp());
+            user.setUpdatedAt(event.getTimestamp());
+            
+            UserDto savedUser = userRepository.save(user);
+            log.info("User saved to writer database: {} (ID: {})", savedUser.getUsername(), savedUser.getId());
+            
+            // Also log the registration activity
+            ActivityLogDto activityLog = new ActivityLogDto();
+            activityLog.setUserId(event.getUserId());
+            activityLog.setIpAddress(event.getIpAddress());
+            activityLog.setUserAgent(event.getUserAgent());
+            activityLog.setSuccessful(true);
+            activityLog.setTimestamp(event.getTimestamp());
+            activityLog.setFailureReason(null);
+            activityLog.setAction("USER_REGISTRATION");
+
+            ActivityLogDto savedLog = activityLogRepository.save(activityLog);
+            log.info("Registration activity log saved: {} for user ID: {}", 
+                    savedLog.getId(), savedLog.getUserId());
+            
+        } catch (Exception e) {
+            log.error("Error processing user registration event for user {}: {}", event.getUsername(), e.getMessage(), e);
+        }
     }
 }
