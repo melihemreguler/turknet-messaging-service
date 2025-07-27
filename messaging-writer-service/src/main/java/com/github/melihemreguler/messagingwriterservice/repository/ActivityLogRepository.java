@@ -10,7 +10,7 @@ import java.util.List;
 @Repository
 public interface ActivityLogRepository extends MongoRepository<ActivityLogDto, String> {
     
-    List<ActivityLogDto> findByUsernameOrderByTimestampDesc(String username);
+    List<ActivityLogDto> findByUserIdOrderByTimestampDesc(String userId);
     
     List<ActivityLogDto> findByTimestampBetweenOrderByTimestampDesc(LocalDateTime start, LocalDateTime end);
     
