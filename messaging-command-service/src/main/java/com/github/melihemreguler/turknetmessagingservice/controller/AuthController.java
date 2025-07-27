@@ -25,6 +25,7 @@ public class AuthController {
     private final SessionService sessionService;
     
     private static final String SESSION_TOKEN_HEADER = "X-Session-Token";
+    private static final String USER_ID_HEADER = "X-User-Id";
     
     @PostMapping("/register")
     public ResponseEntity<ApiResponse<UserDto>> registerUser(@RequestBody @Valid UserRegisterRequest request,
@@ -47,9 +48,10 @@ public class AuthController {
             responseUser.setCreatedAt(user.getCreatedAt());
             responseUser.setPasswordHash(null);
             
-            // Add session token to response headers
+            // Add session token and userId to response headers
             HttpHeaders headers = new HttpHeaders();
             headers.add(SESSION_TOKEN_HEADER, sessionToken);
+            headers.add(USER_ID_HEADER, user.getId());
             
             return ResponseEntity.status(HttpStatus.CREATED)
                     .headers(headers)
@@ -77,9 +79,10 @@ public class AuthController {
             UserService.AuthenticationResult result = userService.authenticateUser(request, ipAddress, userAgent);
             
             if (result.isSuccessful()) {
-                // Add session token to response headers
+                // Add session token and userId to response headers
                 HttpHeaders headers = new HttpHeaders();
                 headers.add(SESSION_TOKEN_HEADER, result.getSessionToken());
+                headers.add(USER_ID_HEADER, result.getUserId());
                 
                 return ResponseEntity.ok()
                         .headers(headers)
