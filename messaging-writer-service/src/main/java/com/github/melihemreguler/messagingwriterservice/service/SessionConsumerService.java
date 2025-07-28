@@ -37,23 +37,12 @@ public class SessionConsumerService {
                      sessionEvent.getCommand(), sessionEvent.getUserId());
             
             switch (sessionEvent.getCommand()) {
-                case "SAVE_SESSION":
-                    handleSessionCreated(sessionEvent);
-                    break;
-                case "UPSERT_SESSION":
-                    handleSessionUpsert(sessionEvent);
-                    break;
-                case "UPDATE_SESSION":
-                    handleSessionUpdated(sessionEvent);
-                    break;
-                case "DELETE_SESSION":
-                    handleSessionDeleted(sessionEvent);
-                    break;
-                case "EXPIRE_SESSION":
-                    handleSessionExpired(sessionEvent);
-                    break;
-                default:
-                    log.warn("Unknown session command: {}", sessionEvent.getCommand());
+                case "SAVE_SESSION" -> handleSessionCreated(sessionEvent);
+                case "UPSERT_SESSION" -> handleSessionUpsert(sessionEvent);
+                case "UPDATE_SESSION" -> handleSessionUpdated(sessionEvent);
+                case "DELETE_SESSION" -> handleSessionDeleted(sessionEvent);
+                case "EXPIRE_SESSION" -> handleSessionExpired(sessionEvent);
+                default -> log.warn("Unknown session command: {}", sessionEvent.getCommand());
             }
             
             log.debug("Successfully processed session event: {}", sessionEvent.getCommand());
