@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    
+    <!-- Console appender for development -->
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder class="net.logstash.logback.encoder.LoggingEventCompositeJsonEncoder">
+            <providers>
+                <timestamp/>
+                <logLevel/>
+                <loggerName/>
+                <message/>
+                <mdc/>
+                <arguments/>
+                <stackTrace/>
+                <pattern>
+                    <pattern>
+                        {
+                            "application": "turknet-messaging-service",
+                            "service": "messaging-consumer"
+                        }
+                    </pattern>
+                </pattern>
+            </providers>
+        </encoder>
+    </appender>
+    
+    <!-- Elasticsearch appender -->
+    <appender name="ELASTICSEARCH" class="com.github.melihemreguler.messagingconsumer.logging.ElasticsearchAppender">
+        <elasticsearchUrl>http://elasticsearch:9200</elasticsearchUrl>
+        <indexName>turknet-messaging-logs</indexName>
+    </appender>
+    
+    <!-- Async wrapper for Elasticsearch to avoid blocking -->
+    <appender name="ASYNC_ELASTICSEARCH" class="ch.qos.logback.classic.AsyncAppender">
+        <appender-ref ref="ELASTICSEARCH"/>
+        <queueSize>1000</queueSize>
+        <discardingThreshold>0</discardingThreshold>
+        <includeCallerData>false</includeCallerData>
+    </appender>
+    
+    <!-- Profile-specific configurations -->
+    <springProfile name="local">
+        <root level="INFO">
+            <appender-ref ref="CONSOLE"/>
+            <appender-ref ref="ASYNC_ELASTICSEARCH"/>
+        </root>
+        
+        <logger name="com.github.melihemreguler.messagingconsumer" level="DEBUG" additivity="false">
+            <appender-ref ref="CONSOLE"/>
+            <appender-ref ref="ASYNC_ELASTICSEARCH"/>
+        </logger>
+    </springProfile>
+    
+    <springProfile name="staging">
+        <root level="INFO">
+            <appender-ref ref="CONSOLE"/>
+            <appender-ref ref="ASYNC_ELASTICSEARCH"/>
+        </root>
+        
+        <logger name="com.github.melihemreguler.messagingconsumer" level="INFO" additivity="false">
+            <appender-ref ref="CONSOLE"/>
+            <appender-ref ref="ASYNC_ELASTICSEARCH"/>
+        </logger>
+    </springProfile>
+    
+    <springProfile name="prod">
+        <root level="WARN">
+            <appender-ref ref="ASYNC_ELASTICSEARCH"/>
+        </root>
+        
+        <logger name="com.github.melihemreguler.messagingconsumer" level="INFO" additivity="false">
+            <appender-ref ref="ASYNC_ELASTICSEARCH"/>
+        </logger>
+    </springProfile>
+    
+</configuration>
