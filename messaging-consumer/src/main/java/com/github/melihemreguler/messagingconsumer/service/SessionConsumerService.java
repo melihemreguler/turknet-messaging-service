@@ -57,7 +57,7 @@ public class SessionConsumerService {
         log.info("Creating session for user: {}", event.getUserId());
         
         SessionDto session = new SessionDto(
-            event.getHashedSessionToken(),
+            event.getHashedSessionId(),
             event.getUserId(),
             event.getExpiresAt(),
             event.getIpAddress(),
@@ -80,7 +80,7 @@ public class SessionConsumerService {
         if (!existingSessions.isEmpty()) {
             // Update existing session
             SessionDto existingSession = existingSessions.get(0); // Take the first one
-            existingSession.setHashedSessionToken(event.getHashedSessionToken());
+            existingSession.setHashedSessionId(event.getHashedSessionId());
             existingSession.setExpiresAt(event.getExpiresAt());
             existingSession.setIpAddress(event.getIpAddress());
             existingSession.setUserAgent(event.getUserAgent());
@@ -100,7 +100,7 @@ public class SessionConsumerService {
         } else {
             // Create new session
             SessionDto session = new SessionDto(
-                event.getHashedSessionToken(),
+                event.getHashedSessionId(),
                 event.getUserId(),
                 event.getExpiresAt(),
                 event.getIpAddress(),
@@ -141,26 +141,26 @@ public class SessionConsumerService {
     private void handleSessionDeleted(SessionEvent event) {
         log.info("Deleting session for user: {}", event.getUserId());
         
-        sessionRepository.findByHashedSessionToken(event.getHashedSessionToken())
+        sessionRepository.findByHashedSessionId(event.getHashedSessionId())
             .ifPresentOrElse(
                 session -> {
                     sessionRepository.delete(session);
                     log.info("Session deleted successfully for user: {}", event.getUserId());
                 },
-                () -> log.warn("Session not found for deletion: {}", event.getHashedSessionToken())
+                () -> log.warn("Session not found for deletion: {}", event.getHashedSessionId())
             );
     }
     
     private void handleSessionExpired(SessionEvent event) {
         log.info("Handling expired session for user: {}", event.getUserId());
         
-        sessionRepository.findByHashedSessionToken(event.getHashedSessionToken())
+        sessionRepository.findByHashedSessionId(event.getHashedSessionId())
             .ifPresentOrElse(
                 session -> {
                     sessionRepository.delete(session);
                     log.info("Expired session deleted for user: {}", event.getUserId());
                 },
-                () -> log.warn("Session not found for expiration: {}", event.getHashedSessionToken())
+                () -> log.warn("Session not found for expiration: {}", event.getHashedSessionId())
             );
     }
 }
