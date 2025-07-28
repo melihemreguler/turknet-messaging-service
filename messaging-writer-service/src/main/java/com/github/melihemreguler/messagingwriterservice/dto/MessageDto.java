@@ -19,7 +19,6 @@ public class MessageDto {
 
     private String threadId;
     private String sender;
-    private String recipient;
     private String content;
     private LocalDateTime timestamp;
     private String status;

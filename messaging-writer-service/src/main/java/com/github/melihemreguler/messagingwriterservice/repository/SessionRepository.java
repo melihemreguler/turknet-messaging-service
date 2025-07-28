@@ -15,11 +15,4 @@ public interface SessionRepository extends MongoRepository<SessionDto, String> {
     Optional<SessionDto> findByHashedSessionToken(String hashedSessionToken);
     
     List<SessionDto> findByUserId(String userId);
-    
-    @Query("{ 'expiresAt': { $lt: ?0 } }")
-    List<SessionDto> findExpiredSessions(LocalDateTime now);
-    
-    void deleteByUserId(String userId);
-    
-    void deleteByExpiresAtBefore(LocalDateTime expirationTime);
 }

@@ -1,4 +1,4 @@
-package com.github.melihemreguler.turknetmessagingservice.config;
+package com.github.melihemreguler.messagingwriterservice.config;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -10,11 +10,10 @@ import org.springframework.context.annotation.Configuration;
 @Getter
 @Setter
 public class MessagingConfig {
-    // Command topics for write operations
-    private String userCommands;
-    private String userCommandsRetry;
     private String messageCommands;
     private String messageCommandsRetry;
+    private String userCommands;
+    private String userCommandsRetry;
     private String sessionCommands;
     private String sessionCommandsRetry;
 }

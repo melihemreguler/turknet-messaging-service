@@ -33,9 +33,12 @@ app:
   kafka:
     topics:
       # Command topics - for sending commands to consumer services
-      user-commands: ${USER_COMMANDS_TOPIC:user_commands_topic}
-      message-commands: ${MESSAGE_COMMANDS_TOPIC:message_commands_topic}
-      session-commands: ${SESSION_COMMANDS_TOPIC:session_commands_topic}
+      user-commands: ${USER_COMMANDS_TOPIC:turknet.transformers.user.commands.0}
+      user-commands-retry: ${USER_COMMANDS_RETRY_TOPIC:turknet.transformers.user.commands.retry.0}
+      message-commands: ${MESSAGE_COMMANDS_TOPIC:turknet.transformers.message.commands.0}
+      message-commands-retry: ${MESSAGE_COMMANDS_RETRY_TOPIC:turknet.transformers.message.commands.retry.0}
+      session-commands: ${SESSION_COMMANDS_TOPIC:turknet.transformers.session.commands.0}
+      session-commands-retry: ${SESSION_COMMANDS_RETRY_TOPIC:turknet.transformers.session.commands.retry.0}
   session:
     expiration-hours: ${SESSION_EXPIRATION_HOURS:24}
     cleanup-interval-minutes: ${SESSION_CLEANUP_INTERVAL_MINUTES:60}
@@ -94,9 +97,13 @@ app:
   kafka:
     topics:
       # Command topics - for sending commands to consumer services
-      user-commands: ${USER_COMMANDS_TOPIC:user_commands_topic}
-      message-commands: ${MESSAGE_COMMANDS_TOPIC:message_commands_topic}
-      session-commands: ${SESSION_COMMANDS_TOPIC:session_commands_topic}
+      user-commands: ${USER_COMMANDS_TOPIC:turknet.transformers.user.commands.0}
+      user-commands-retry: ${USER_COMMANDS_RETRY_TOPIC:turknet.transformers.user.commands.retry.0}
+      message-commands: ${MESSAGE_COMMANDS_TOPIC:turknet.transformers.message.commands.0}
+      message-commands-retry: ${MESSAGE_COMMANDS_RETRY_TOPIC:turknet.transformers.message.commands.retry.0}
+      session-commands: ${SESSION_COMMANDS_TOPIC:turknet.transformers.session.commands.0}
+      session-commands-retry: ${SESSION_COMMANDS_RETRY_TOPIC:turknet.transformers.session.commands.retry.0}
+
   session:
     expiration-hours: ${SESSION_EXPIRATION_HOURS:24}
     cleanup-interval-minutes: ${SESSION_CLEANUP_INTERVAL_MINUTES:60}

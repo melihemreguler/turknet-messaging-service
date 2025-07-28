@@ -41,7 +41,7 @@ public class SessionService {
             SessionEvent sessionEvent = SessionEvent.createOrUpdate(
                 hashedSessionToken, userId, expiresAt, ipAddress, userAgent);
             
-            kafkaProducerService.sendSessionCommand(sessionEvent);
+            kafkaProducerService.sendSessionCommand(sessionEvent, userId);
             
             log.info("Session created/updated for user: {} (ID: {}) with expiration: {}", username, userId, expiresAt);
             return sessionToken;

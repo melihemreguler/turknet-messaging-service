@@ -7,9 +7,4 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 @Repository
-public interface MessageRepository extends MongoRepository<MessageDto, String> {
-    
-    List<MessageDto> findByThreadIdOrderByTimestampAsc(String threadId);
-    
-    List<MessageDto> findBySenderOrRecipientOrderByTimestampDesc(String sender, String recipient);
-}
+public interface MessageRepository extends MongoRepository<MessageDto, String> {}

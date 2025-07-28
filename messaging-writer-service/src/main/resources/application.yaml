@@ -25,9 +25,15 @@ spring:
 app:
   kafka:
     topics:
-      message-commands: message_commands_topic
-      user-commands: user_commands_topic
-      session-commands: session_commands_topic
+      message-commands: turknet.transformers.message.commands.0
+      message-commands-retry: turknet.transformers.message.commands.retry.0
+      user-commands: turknet.transformers.user.commands.0
+      user-commands-retry: turknet.transformers.user.commands.retry.0
+      session-commands: turknet.transformers.session.commands.0
+      session-commands-retry: turknet.transformers.session.commands.retry.0
+    retry:
+      max-retry: 5
+      cron: "*/10 * * * *"
 
 server:
   port: 8081
@@ -69,3 +75,16 @@ spring:
       auto-offset-reset: earliest
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+
+app:
+  kafka:
+    topics:
+      message-commands: turknet.transformers.message.commands.0
+      message-commands-retry: turknet.transformers.message.commands.retry.0
+      user-commands: turknet.transformers.user.commands.0
+      user-commands-retry: turknet.transformers.user.commands.retry.0
+      session-commands: turknet.transformers.session.commands.0
+      session-commands-retry: turknet.transformers.session.commands.retry.0
+    retry:
+      max-retry: 5
+      cron: "*/10 * * * *"

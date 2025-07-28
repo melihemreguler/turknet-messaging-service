@@ -8,11 +8,4 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Repository
-public interface ActivityLogRepository extends MongoRepository<ActivityLogDto, String> {
-    
-    List<ActivityLogDto> findByUserIdOrderByTimestampDesc(String userId);
-    
-    List<ActivityLogDto> findByTimestampBetweenOrderByTimestampDesc(LocalDateTime start, LocalDateTime end);
-    
-    List<ActivityLogDto> findBySuccessfulFalseOrderByTimestampDesc();
-}
+public interface ActivityLogRepository extends MongoRepository<ActivityLogDto, String> {}
