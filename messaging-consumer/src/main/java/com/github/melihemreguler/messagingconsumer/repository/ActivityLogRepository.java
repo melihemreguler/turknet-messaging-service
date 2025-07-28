@@ -6,6 +6,9 @@ import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
-public interface ActivityLogRepository extends MongoRepository<ActivityLogDto, String> {}
+public interface ActivityLogRepository extends MongoRepository<ActivityLogDto, String> {
+    Optional<ActivityLogDto> findByUserId(String userId);
+}
