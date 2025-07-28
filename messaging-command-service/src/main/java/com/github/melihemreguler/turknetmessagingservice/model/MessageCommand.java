@@ -1,5 +1,7 @@
 package com.github.melihemreguler.turknetmessagingservice.model;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+
 import java.time.LocalDateTime;
 
 public record MessageCommand(
@@ -7,10 +9,9 @@ public record MessageCommand(
     String messageId,
     String threadId,
     String sender,
-    String recipient,
     String content,
-    LocalDateTime timestamp,
-    String status
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSSSS")
+    LocalDateTime timestamp
 ) {
     public static MessageCommand create(
             String messageId,
@@ -19,14 +20,12 @@ public record MessageCommand(
             String recipient,
             String content) {
         return new MessageCommand(
-            "SEND_MESSAGE",
+            com.github.melihemreguler.turknetmessagingservice.enums.MessageCommand.SEND_MESSAGE.getCommand(),
             messageId,
             threadId,
             sender,
-            recipient,
             content,
-            LocalDateTime.now(),
-            "pending"
+            LocalDateTime.now()
         );
     }
 }
