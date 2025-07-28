@@ -1,6 +1,7 @@
 package com.github.melihemreguler.turknetmessagingservice.service;
 
 import com.github.melihemreguler.turknetmessagingservice.dto.UserDto;
+import com.github.melihemreguler.turknetmessagingservice.exception.ConflictException;
 import com.github.melihemreguler.turknetmessagingservice.model.UserRegisterRequest;
 import com.github.melihemreguler.turknetmessagingservice.model.LoginRequest;
 import com.github.melihemreguler.turknetmessagingservice.model.UserActivityEvent;
@@ -25,37 +26,30 @@ public class UserService {
     private final SessionService sessionService;
     
     public UserDto registerUser(UserRegisterRequest request, String ipAddress, String userAgent) {
-        try {
-            // Check if user already exists
-            if (userRepository.existsByUsername(request.username())) {
-                throw new IllegalArgumentException("Username already exists");
-            }
-            
-            UserDto userDto = new UserDto();
-            userDto.setUsername(request.username());
-            userDto.setPasswordHash(passwordEncoder.encode(request.password()));
-            userDto.setCreatedAt(LocalDateTime.now());
-            
-            UserDto savedUser = userRepository.save(userDto);
-            
-            // Send user creation event to Kafka for activity logging
-            UserCreationEvent creationEvent = UserCreationEvent.create(
-                savedUser.getUsername(), 
-                savedUser.getId(),
-                request.email(),
-                ipAddress,
-                userAgent
-            );
-            kafkaProducerService.sendUserCommand(creationEvent, savedUser.getId());
-            
-            log.info("User registered successfully: {}", savedUser.getUsername());
-            return savedUser;
-        } catch (IllegalArgumentException e) {
-            throw e; // Re-throw validation errors
-        } catch (Exception e) {
-            log.error("Error registering user: {}", e.getMessage());
-            throw new RuntimeException("Failed to register user", e);
+        // Check if user already exists
+        if (userRepository.existsByUsername(request.username())) {
+            throw new ConflictException("Username already exists");
         }
+        
+        UserDto userDto = new UserDto();
+        userDto.setUsername(request.username());
+        userDto.setPasswordHash(passwordEncoder.encode(request.password()));
+        userDto.setCreatedAt(LocalDateTime.now());
+        
+        UserDto savedUser = userRepository.save(userDto);
+        
+        // Send user creation event to Kafka for activity logging
+        UserCreationEvent creationEvent = UserCreationEvent.create(
+            savedUser.getUsername(), 
+            savedUser.getId(),
+            request.email(),
+            ipAddress,
+            userAgent
+        );
+        kafkaProducerService.sendUserCommand(creationEvent, savedUser.getId());
+        
+        log.info("User registered successfully: {}", savedUser.getUsername());
+        return savedUser;
     }
     
     public AuthenticationResult authenticateUser(LoginRequest request, String ipAddress, String userAgent) {

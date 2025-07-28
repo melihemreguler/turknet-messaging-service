@@ -31,85 +31,63 @@ public class AuthController {
     @PostMapping("/register")
     public ResponseEntity<ApiResponse<UserResponseDto>> registerUser(@RequestBody @Valid UserRegisterRequest request,
                                                                     HttpServletRequest httpRequest) {
-        try {
-            log.info("User registration request received for username: {}", request.username());
-            
-            // Get client info
-            String ipAddress = getClientIpAddress(httpRequest);
-            String userAgent = httpRequest.getHeader("User-Agent");
-            
-            UserDto user = userService.registerUser(request, ipAddress, userAgent);
-            
-            // Create session for the newly registered user
-            String sessionToken = sessionService.createSession(user.getId(), user.getUsername(), ipAddress, userAgent);
-            
-            UserResponseDto responseUser = UserResponseDto.fromUserDto(user);
-            
-            // Add session token and userId to response headers
-            HttpHeaders headers = new HttpHeaders();
-            headers.add(SESSION_TOKEN_HEADER, sessionToken);
-            headers.add(USER_ID_HEADER, user.getId());
-            
-            return ResponseEntity.status(HttpStatus.CREATED)
-                    .headers(headers)
-                    .body(ApiResponse.success("User registered successfully", responseUser));
-        } catch (IllegalArgumentException e) {
-            log.warn("User registration failed: {}", e.getMessage());
-            return ResponseEntity.status(HttpStatus.CONFLICT)
-                    .body(ApiResponse.error(e.getMessage()));
-        } catch (Exception e) {
-            log.error("Unexpected error during user registration: {}", e.getMessage(), e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ApiResponse.error("Internal server error"));
-        }
+        log.info("User registration request received for username: {}", request.username());
+        
+        // Get client info
+        String ipAddress = getClientIpAddress(httpRequest);
+        String userAgent = httpRequest.getHeader("User-Agent");
+        
+        UserDto user = userService.registerUser(request, ipAddress, userAgent);
+        
+        // Create session for the newly registered user
+        String sessionToken = sessionService.createSession(user.getId(), user.getUsername(), ipAddress, userAgent);
+        
+        UserResponseDto responseUser = UserResponseDto.fromUserDto(user);
+        
+        // Add session token and userId to response headers
+        HttpHeaders headers = new HttpHeaders();
+        headers.add(SESSION_TOKEN_HEADER, sessionToken);
+        headers.add(USER_ID_HEADER, user.getId());
+        
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .headers(headers)
+                .body(ApiResponse.success("User registered successfully", responseUser));
     }
     
     @PostMapping("/login")
     public ResponseEntity<ApiResponse<String>> loginUser(@RequestBody @Valid LoginRequest request,
                                                         HttpServletRequest httpRequest) {
-        try {
-            String ipAddress = getClientIpAddress(httpRequest);
-            String userAgent = httpRequest.getHeader("User-Agent");
+        String ipAddress = getClientIpAddress(httpRequest);
+        String userAgent = httpRequest.getHeader("User-Agent");
+        
+        log.info("Login attempt for username: {} from IP: {}", request.username(), ipAddress);
+        
+        UserService.AuthenticationResult result = userService.authenticateUser(request, ipAddress, userAgent);
+        
+        if (result.isSuccessful()) {
+            // Add session token and userId to response headers
+            HttpHeaders headers = new HttpHeaders();
+            headers.add(SESSION_TOKEN_HEADER, result.getSessionToken());
+            headers.add(USER_ID_HEADER, result.getUserId());
             
-            log.info("Login attempt for username: {} from IP: {}", request.username(), ipAddress);
-            
-            UserService.AuthenticationResult result = userService.authenticateUser(request, ipAddress, userAgent);
-            
-            if (result.isSuccessful()) {
-                // Add session token and userId to response headers
-                HttpHeaders headers = new HttpHeaders();
-                headers.add(SESSION_TOKEN_HEADER, result.getSessionToken());
-                headers.add(USER_ID_HEADER, result.getUserId());
-                
-                return ResponseEntity.ok()
-                        .headers(headers)
-                        .body(ApiResponse.success("Login successful", result.getUserId()));
-            } else {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                        .body(ApiResponse.error("Invalid credentials"));
-            }
-        } catch (Exception e) {
-            log.error("Unexpected error during login: {}", e.getMessage(), e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ApiResponse.error("Internal server error"));
+            return ResponseEntity.ok()
+                    .headers(headers)
+                    .body(ApiResponse.success("Login successful", result.getUserId()));
+        } else {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(ApiResponse.error("Invalid credentials"));
         }
     }
     
     @PostMapping("/logout")
     public ResponseEntity<ApiResponse<String>> logoutUser(@RequestHeader(value = SESSION_TOKEN_HEADER, required = false) String sessionToken) {
-        try {
-            if (sessionToken != null && !sessionToken.trim().isEmpty()) {
-                sessionService.invalidateSession(sessionToken);
-                log.info("User logged out successfully");
-                return ResponseEntity.ok(ApiResponse.success("Logout successful", "Session invalidated"));
-            } else {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                        .body(ApiResponse.error("No session token provided"));
-            }
-        } catch (Exception e) {
-            log.error("Unexpected error during logout: {}", e.getMessage(), e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ApiResponse.error("Internal server error"));
+        if (sessionToken != null && !sessionToken.trim().isEmpty()) {
+            sessionService.invalidateSession(sessionToken);
+            log.info("User logged out successfully");
+            return ResponseEntity.ok(ApiResponse.success("Logout successful", "Session invalidated"));
+        } else {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(ApiResponse.error("No session token provided"));
         }
     }
     

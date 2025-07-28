@@ -31,30 +31,20 @@ public class MessageController {
             HttpServletRequest httpRequest,
             HttpServletResponse httpResponse) {
         
-        try {
-            // Get the authenticated user from the request attribute (set by interceptor)
-            String senderId = (String) httpRequest.getAttribute("currentUser");
-            
-            log.info("Message send request from user ID {} to {}", senderId, request.recipient());
-            MessageDto message = messageService.sendMessage(senderId, request);
-            
-            // Add session token back to response header
-            String sessionToken = httpRequest.getHeader(SESSION_TOKEN_HEADER);
-            if (sessionToken != null) {
-                httpResponse.addHeader(SESSION_TOKEN_HEADER, sessionToken);
-            }
-            
-            return ResponseEntity.status(HttpStatus.CREATED)
-                    .body(ApiResponse.success("Message sent successfully", message));
-        } catch (IllegalArgumentException e) {
-            log.warn("Message send failed: {}", e.getMessage());
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(ApiResponse.error(e.getMessage()));
-        } catch (Exception e) {
-            log.error("Unexpected error during message send: {}", e.getMessage(), e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ApiResponse.error("Internal server error"));
+        // Get the authenticated user from the request attribute (set by interceptor)
+        String senderId = (String) httpRequest.getAttribute("currentUser");
+        
+        log.info("Message send request from user ID {} to {}", senderId, request.recipient());
+        MessageDto message = messageService.sendMessage(senderId, request);
+        
+        // Add session token back to response header
+        String sessionToken = httpRequest.getHeader(SESSION_TOKEN_HEADER);
+        if (sessionToken != null) {
+            httpResponse.addHeader(SESSION_TOKEN_HEADER, sessionToken);
         }
+        
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ApiResponse.success("Message sent successfully", message));
     }
     
     @PostMapping("/conversation")
@@ -63,33 +53,27 @@ public class MessageController {
             HttpServletRequest httpRequest,
             HttpServletResponse httpResponse) {
         
-        try {
-            // Get the authenticated user from the request attribute (set by interceptor)
-            String currentUserId = (String) httpRequest.getAttribute("currentUser");
-            
-            // Ensure the current user is part of the conversation
-            if (!currentUserId.equals(request.user1()) && !currentUserId.equals(request.user2())) {
-                log.warn("User {} attempted to access conversation between {} and {}", 
-                        currentUserId, request.user1(), request.user2());
-                return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                        .body(ApiResponse.error("Access denied to this conversation"));
-            }
-            
-            log.info("Fetching conversation between {} and {}", request.user1(), request.user2());
-            List<MessageDto> messages = messageService.getConversation(request.user1(), request.user2());
-            
-            // Add session token back to response header
-            String sessionToken = httpRequest.getHeader(SESSION_TOKEN_HEADER);
-            if (sessionToken != null) {
-                httpResponse.addHeader(SESSION_TOKEN_HEADER, sessionToken);
-            }
-            
-            return ResponseEntity.ok(ApiResponse.success("Conversation retrieved successfully", messages));
-        } catch (Exception e) {
-            log.error("Error fetching conversation: {}", e.getMessage(), e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ApiResponse.error("Internal server error"));
+        // Get the authenticated user from the request attribute (set by interceptor)
+        String currentUserId = (String) httpRequest.getAttribute("currentUser");
+        
+        // Ensure the current user is part of the conversation
+        if (!currentUserId.equals(request.user1()) && !currentUserId.equals(request.user2())) {
+            log.warn("User {} attempted to access conversation between {} and {}", 
+                    currentUserId, request.user1(), request.user2());
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(ApiResponse.error("Access denied to this conversation"));
         }
+        
+        log.info("Fetching conversation between {} and {}", request.user1(), request.user2());
+        List<MessageDto> messages = messageService.getConversation(request.user1(), request.user2());
+        
+        // Add session token back to response header
+        String sessionToken = httpRequest.getHeader(SESSION_TOKEN_HEADER);
+        if (sessionToken != null) {
+            httpResponse.addHeader(SESSION_TOKEN_HEADER, sessionToken);
+        }
+        
+        return ResponseEntity.ok(ApiResponse.success("Conversation retrieved successfully", messages));
     }
     
     @GetMapping("/user/{userId}")
@@ -97,31 +81,25 @@ public class MessageController {
             @PathVariable String userId,
             HttpServletRequest httpRequest,
             HttpServletResponse httpResponse) {
-        try {
-            // Get the authenticated user from the request attribute (set by interceptor)
-            String currentUserId = (String) httpRequest.getAttribute("currentUser");
-            
-            // Ensure users can only access their own messages
-            if (!currentUserId.equals(userId)) {
-                log.warn("User {} attempted to access messages for user {}", currentUserId, userId);
-                return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                        .body(ApiResponse.error("Access denied to these messages"));
-            }
-            
-            log.info("Fetching messages for user ID: {}", userId);
-            List<MessageDto> messages = messageService.getUserMessages(userId);
-            
-            // Add session token back to response header
-            String sessionToken = httpRequest.getHeader(SESSION_TOKEN_HEADER);
-            if (sessionToken != null) {
-                httpResponse.addHeader(SESSION_TOKEN_HEADER, sessionToken);
-            }
-            
-            return ResponseEntity.ok(ApiResponse.success("User messages retrieved successfully", messages));
-        } catch (Exception e) {
-            log.error("Error fetching user messages: {}", e.getMessage(), e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ApiResponse.error("Internal server error"));
+        // Get the authenticated user from the request attribute (set by interceptor)
+        String currentUserId = (String) httpRequest.getAttribute("currentUser");
+        
+        // Ensure users can only access their own messages
+        if (!currentUserId.equals(userId)) {
+            log.warn("User {} attempted to access messages for user {}", currentUserId, userId);
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(ApiResponse.error("Access denied to these messages"));
         }
+        
+        log.info("Fetching messages for user ID: {}", userId);
+        List<MessageDto> messages = messageService.getUserMessages(userId);
+        
+        // Add session token back to response header
+        String sessionToken = httpRequest.getHeader(SESSION_TOKEN_HEADER);
+        if (sessionToken != null) {
+            httpResponse.addHeader(SESSION_TOKEN_HEADER, sessionToken);
+        }
+        
+        return ResponseEntity.ok(ApiResponse.success("User messages retrieved successfully", messages));
     }
 }

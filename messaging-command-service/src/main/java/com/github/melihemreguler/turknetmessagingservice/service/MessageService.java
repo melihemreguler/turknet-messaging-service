@@ -2,6 +2,7 @@ package com.github.melihemreguler.turknetmessagingservice.service;
 
 import com.github.melihemreguler.turknetmessagingservice.dto.MessageDto;
 import com.github.melihemreguler.turknetmessagingservice.dto.UserDto;
+import com.github.melihemreguler.turknetmessagingservice.exception.UserNotFoundException;
 import com.github.melihemreguler.turknetmessagingservice.model.MessageRequest;
 import com.github.melihemreguler.turknetmessagingservice.model.MessageCommand;
 import com.github.melihemreguler.turknetmessagingservice.repository.MessageRepository;
@@ -29,12 +30,12 @@ public class MessageService {
         // Get sender user info
         Optional<UserDto> senderUser = userRepository.findById(senderId);
         if (senderUser.isEmpty()) {
-            throw new IllegalArgumentException("Sender not found: " + senderId);
+            throw UserNotFoundException.forSender(senderId);
         }
         
         Optional<UserDto> recipientUser = userRepository.findByUsername(recipient);
         if (recipientUser.isEmpty()) {
-            throw new IllegalArgumentException("Recipient not found: " + recipient);
+            throw UserNotFoundException.forRecipient(recipient);
         }
         
         String senderUsername = senderUser.get().getUsername();
@@ -65,7 +66,7 @@ public class MessageService {
         Optional<UserDto> user2Opt = userRepository.findById(userId2);
         
         if (user1Opt.isEmpty() || user2Opt.isEmpty()) {
-            throw new IllegalArgumentException("One or both users not found");
+            throw UserNotFoundException.forConversation();
         }
         
         String username1 = user1Opt.get().getUsername().trim().toLowerCase();
@@ -79,7 +80,7 @@ public class MessageService {
         // Get username from userId
         Optional<UserDto> userOpt = userRepository.findById(userId);
         if (userOpt.isEmpty()) {
-            throw new IllegalArgumentException("User not found: " + userId);
+            throw UserNotFoundException.forUserId(userId);
         }
         
         String username = userOpt.get().getUsername().trim().toLowerCase();
