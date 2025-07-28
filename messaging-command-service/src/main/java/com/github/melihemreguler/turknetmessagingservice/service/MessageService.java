@@ -48,7 +48,7 @@ public class MessageService {
         MessageCommand messageCommand = MessageCommand.create(
             tempMessageId, threadId, senderUsername, recipient, content);
         
-        kafkaProducerService.sendMessageCommand(messageCommand);
+        kafkaProducerService.sendMessageCommand(messageCommand, senderId);
         
         log.info("Message command sent to Kafka from {} to {} in thread {}", senderUsername, recipient, threadId);
         
