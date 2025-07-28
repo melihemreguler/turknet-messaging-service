@@ -13,7 +13,7 @@ public class SessionDto {
     private String id;
     
     @Indexed(unique = true)
-    private String hashedSessionToken;
+    private String hashedSessionId;
     
     @Indexed
     private String userId;
@@ -34,9 +34,9 @@ public class SessionDto {
         this.lastAccessedAt = LocalDateTime.now();
     }
     
-    public SessionDto(String hashedSessionToken, String userId, LocalDateTime expiresAt, String ipAddress, String userAgent) {
+    public SessionDto(String hashedSessionId, String userId, LocalDateTime expiresAt, String ipAddress, String userAgent) {
         this();
-        this.hashedSessionToken = hashedSessionToken;
+        this.hashedSessionId = hashedSessionId;
         this.userId = userId;
         this.expiresAt = expiresAt;
         this.ipAddress = ipAddress;
@@ -52,12 +52,12 @@ public class SessionDto {
         this.id = id;
     }
     
-    public String getHashedSessionToken() {
-        return hashedSessionToken;
+    public String getHashedSessionId() {
+        return hashedSessionId;
     }
     
-    public void setHashedSessionToken(String hashedSessionToken) {
-        this.hashedSessionToken = hashedSessionToken;
+    public void setHashedSessionId(String hashedSessionId) {
+        this.hashedSessionId = hashedSessionId;
     }
     
     public String getUserId() {
@@ -121,7 +121,7 @@ public class SessionDto {
     public String toString() {
         return "SessionDto{" +
                 "id='" + id + '\'' +
-                ", hashedSessionToken='" + hashedSessionToken + '\'' +
+                ", hashedSessionId='" + hashedSessionId + '\'' +
                 ", userId='" + userId + '\'' +
                 ", expiresAt=" + expiresAt +
                 ", createdAt=" + createdAt +

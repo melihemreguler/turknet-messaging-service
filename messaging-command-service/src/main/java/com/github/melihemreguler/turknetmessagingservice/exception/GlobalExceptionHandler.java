@@ -1,7 +1,7 @@
 package com.github.melihemreguler.turknetmessagingservice.exception;
 
-import com.github.melihemreguler.turknetmessagingservice.model.ApiResponse;
-import com.github.melihemreguler.turknetmessagingservice.model.ValidationErrorResponse;
+import com.github.melihemreguler.turknetmessagingservice.model.api.ApiResponse;
+import com.github.melihemreguler.turknetmessagingservice.model.api.ValidationErrorResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -51,6 +51,13 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiResponse<Void>> handleConflictException(ConflictException ex) {
         log.warn("Conflict error: {}", ex.getMessage());
         return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(ApiResponse.error(ex.getMessage()));
+    }
+    
+    @ExceptionHandler(ThreadNotFoundException.class)
+    public ResponseEntity<ApiResponse<Void>> handleThreadNotFoundException(ThreadNotFoundException ex) {
+        log.warn("Thread not found: {}", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
                 .body(ApiResponse.error(ex.getMessage()));
     }
 

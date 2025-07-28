@@ -1,4 +1,4 @@
-package com.github.melihemreguler.turknetmessagingservice.model;
+package com.github.melihemreguler.turknetmessagingservice.model.event;
 
 import com.github.melihemreguler.turknetmessagingservice.enums.UserCommand;
 import lombok.AllArgsConstructor;

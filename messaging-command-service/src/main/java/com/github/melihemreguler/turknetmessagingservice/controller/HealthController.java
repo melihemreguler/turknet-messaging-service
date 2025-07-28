@@ -1,8 +1,7 @@
 package com.github.melihemreguler.turknetmessagingservice.controller;
 
-import com.github.melihemreguler.turknetmessagingservice.model.HealthResponse;
-import com.github.melihemreguler.turknetmessagingservice.model.ReadinessResponse;
-import jakarta.servlet.http.HttpServletResponse;
+import com.github.melihemreguler.turknetmessagingservice.model.api.HealthResponse;
+import com.github.melihemreguler.turknetmessagingservice.model.api.ReadinessResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.admin.AdminClient;

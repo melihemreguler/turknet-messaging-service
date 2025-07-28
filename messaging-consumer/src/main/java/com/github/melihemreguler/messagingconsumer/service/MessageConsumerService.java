@@ -7,11 +7,11 @@ import com.github.melihemreguler.messagingconsumer.model.MessageCommandEvent;
 import com.github.melihemreguler.messagingconsumer.repository.MessageRepository;
 import com.github.melihemreguler.messagingconsumer.config.KafkaRetryConfig;
 import com.github.melihemreguler.messagingconsumer.config.MessagingConfig;
+import com.github.melihemreguler.messagingconsumer.enums.MessageStatus;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.core.KafkaTemplate;
-import org.springframework.kafka.support.KafkaHeaders;
 import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.stereotype.Service;
 
@@ -49,17 +49,17 @@ public class MessageConsumerService {
 
     private void processMessageCommand(MessageCommandEvent event) {
         MessageDto message = MessageDto.builder()
-                .id(event.getMessageId())
                 .threadId(event.getThreadId())
-                .sender(event.getSender())
+                .senderId(event.getSenderId())
+                .senderUsername(event.getSenderUsername())
                 .content(event.getContent())
                 .timestamp(event.getTimestamp())
-                .status("delivered")
+                .status(MessageStatus.SENT.getStatus())
                 .build();
 
         MessageDto savedMessage = messageRepository.save(message);
         log.info("Message saved to database: {} from {} to recipient", 
-                savedMessage.getId(), savedMessage.getSender());
+                savedMessage.getId(), savedMessage.getSenderId());
     }
     
     private void handleRetry(String message, int retryCount, Exception error) {

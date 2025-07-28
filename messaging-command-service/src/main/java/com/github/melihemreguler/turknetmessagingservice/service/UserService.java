@@ -2,10 +2,10 @@ package com.github.melihemreguler.turknetmessagingservice.service;
 
 import com.github.melihemreguler.turknetmessagingservice.dto.UserDto;
 import com.github.melihemreguler.turknetmessagingservice.exception.ConflictException;
-import com.github.melihemreguler.turknetmessagingservice.model.UserRegisterRequest;
-import com.github.melihemreguler.turknetmessagingservice.model.LoginRequest;
-import com.github.melihemreguler.turknetmessagingservice.model.UserActivityEvent;
-import com.github.melihemreguler.turknetmessagingservice.model.UserCreationEvent;
+import com.github.melihemreguler.turknetmessagingservice.model.api.UserRegisterRequest;
+import com.github.melihemreguler.turknetmessagingservice.model.api.LoginRequest;
+import com.github.melihemreguler.turknetmessagingservice.model.event.UserActivityEvent;
+import com.github.melihemreguler.turknetmessagingservice.model.event.UserCreationEvent;
 import com.github.melihemreguler.turknetmessagingservice.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -106,13 +106,13 @@ public class UserService {
     public static class AuthenticationResult {
         private final boolean successful;
         private final String failureReason;
-        private final String sessionToken;
+        private final String sessionId;
         private final String userId;
         
-        public AuthenticationResult(boolean successful, String failureReason, String sessionToken, String userId) {
+        public AuthenticationResult(boolean successful, String failureReason, String sessionId, String userId) {
             this.successful = successful;
             this.failureReason = failureReason;
-            this.sessionToken = sessionToken;
+            this.sessionId = sessionId;
             this.userId = userId;
         }
         
@@ -124,8 +124,8 @@ public class UserService {
             return failureReason;
         }
         
-        public String getSessionToken() {
-            return sessionToken;
+        public String getSessionId() {
+            return sessionId;
         }
         
         public String getUserId() {

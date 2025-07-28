@@ -14,9 +14,9 @@ import java.time.LocalDateTime;
 public class MessageCommandEvent {
     
     private String command;
-    private String messageId;
     private String threadId;
-    private String sender;
+    private String senderId;
+    private String senderUsername;
     private String content;
     
     @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSSSS")

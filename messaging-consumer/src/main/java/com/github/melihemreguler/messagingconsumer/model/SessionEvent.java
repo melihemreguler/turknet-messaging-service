@@ -16,8 +16,8 @@ public class SessionEvent {
     @JsonProperty("command")
     private String command;
     
-    @JsonProperty("hashedSessionToken")
-    private String hashedSessionToken;
+    @JsonProperty("hashedSessionId")
+    private String hashedSessionId;
     
     @JsonProperty("userId")
     private String userId;

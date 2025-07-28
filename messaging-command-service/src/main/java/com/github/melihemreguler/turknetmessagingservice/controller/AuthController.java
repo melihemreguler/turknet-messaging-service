@@ -1,10 +1,11 @@
 package com.github.melihemreguler.turknetmessagingservice.controller;
 
+import com.github.melihemreguler.turknetmessagingservice.enums.SessionConstants;
 import com.github.melihemreguler.turknetmessagingservice.dto.UserDto;
 import com.github.melihemreguler.turknetmessagingservice.dto.UserResponseDto;
-import com.github.melihemreguler.turknetmessagingservice.model.ApiResponse;
-import com.github.melihemreguler.turknetmessagingservice.model.UserRegisterRequest;
-import com.github.melihemreguler.turknetmessagingservice.model.LoginRequest;
+import com.github.melihemreguler.turknetmessagingservice.model.api.ApiResponse;
+import com.github.melihemreguler.turknetmessagingservice.model.api.UserRegisterRequest;
+import com.github.melihemreguler.turknetmessagingservice.model.api.LoginRequest;
 import com.github.melihemreguler.turknetmessagingservice.service.UserService;
 import com.github.melihemreguler.turknetmessagingservice.service.SessionService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -25,9 +26,7 @@ public class AuthController {
     private final UserService userService;
     private final SessionService sessionService;
     
-    private static final String SESSION_TOKEN_HEADER = "X-Session-Token";
-    private static final String USER_ID_HEADER = "X-User-Id";
-    
+
     @PostMapping("/register")
     public ResponseEntity<ApiResponse<UserResponseDto>> registerUser(@RequestBody @Valid UserRegisterRequest request,
                                                                     HttpServletRequest httpRequest) {
@@ -40,14 +39,14 @@ public class AuthController {
         UserDto user = userService.registerUser(request, ipAddress, userAgent);
         
         // Create session for the newly registered user
-        String sessionToken = sessionService.createSession(user.getId(), user.getUsername(), ipAddress, userAgent);
+        String sessionId = sessionService.createSession(user.getId(), user.getUsername(), ipAddress, userAgent);
         
         UserResponseDto responseUser = UserResponseDto.fromUserDto(user);
         
-        // Add session token and userId to response headers
+        // Add session Id and userId to response headers for initial authentication
         HttpHeaders headers = new HttpHeaders();
-        headers.add(SESSION_TOKEN_HEADER, sessionToken);
-        headers.add(USER_ID_HEADER, user.getId());
+        headers.add(SessionConstants.SESSION_ID_HEADER.getValue(), sessionId);
+        headers.add(SessionConstants.USER_ID_HEADER.getValue(), user.getId());
         
         return ResponseEntity.status(HttpStatus.CREATED)
                 .headers(headers)
@@ -65,10 +64,10 @@ public class AuthController {
         UserService.AuthenticationResult result = userService.authenticateUser(request, ipAddress, userAgent);
         
         if (result.isSuccessful()) {
-            // Add session token and userId to response headers
+            // Add session Id and userId to response headers for initial authentication
             HttpHeaders headers = new HttpHeaders();
-            headers.add(SESSION_TOKEN_HEADER, result.getSessionToken());
-            headers.add(USER_ID_HEADER, result.getUserId());
+            headers.add(SessionConstants.SESSION_ID_HEADER.getValue(), result.getSessionId());
+            headers.add(SessionConstants.USER_ID_HEADER.getValue(), result.getUserId());
             
             return ResponseEntity.ok()
                     .headers(headers)
@@ -80,14 +79,14 @@ public class AuthController {
     }
     
     @PostMapping("/logout")
-    public ResponseEntity<ApiResponse<String>> logoutUser(@RequestHeader(value = SESSION_TOKEN_HEADER, required = false) String sessionToken) {
-        if (sessionToken != null && !sessionToken.trim().isEmpty()) {
-            sessionService.invalidateSession(sessionToken);
+    public ResponseEntity<ApiResponse<String>> logoutUser(@RequestHeader(value = "X-Session-Id", required = false) String sessionId) {
+        if (sessionId != null && !sessionId.trim().isEmpty()) {
+            sessionService.invalidateSession(sessionId);
             log.info("User logged out successfully");
             return ResponseEntity.ok(ApiResponse.success("Logout successful", "Session invalidated"));
         } else {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(ApiResponse.error("No session token provided"));
+                    .body(ApiResponse.error("No session Id provided"));
         }
     }
     
