@@ -7,7 +7,7 @@ spring:
   
   data:
     mongodb:
-      uri: mongodb://admin:password@localhost:27017/turknet-messaging-db?authSource=admin
+      uri: mongodb://admin:password@mongodb:27017/turknet-messaging-db?authSource=admin
       database: turknet-messaging-db
   
   kafka:
@@ -30,6 +30,9 @@ app:
     retry:
       max-retry: 5
       cron: "*/10 * * * *"
+  elasticsearch:
+    url: http://elasticsearch:9200
+    index-name: turknet-messaging-logs
 
 server:
   port: 8081
@@ -57,7 +60,7 @@ spring:
 
   data:
     mongodb:
-      uri: mongodb://admin:password@localhost:27017/turknet-messaging-db?authSource=admin
+      uri: mongodb://admin:password@mongodb:27017/turknet-messaging-db?authSource=admin
       database: turknet-messaging-db
   
   kafka:
@@ -80,6 +83,9 @@ app:
     retry:
       max-retry: 5
       cron: "*/10 * * * *"
+  elasticsearch:
+    url: http://elasticsearch:9200
+    index-name: turknet-messaging-logs
 
 server:
   port: 8081
@@ -107,7 +113,7 @@ spring:
 
   data:
     mongodb:
-      uri: mongodb://admin:password@localhost:27017/turknet-messaging-db?authSource=admin
+      uri: mongodb://admin:password@mongodb:27017/turknet-messaging-db?authSource=admin
       database: turknet-messaging-db
   
   kafka:
@@ -130,6 +136,9 @@ app:
     retry:
       max-retry: 3
       cron: "*/30 * * * *"
+  elasticsearch:
+    url: http://elasticsearch:9200
+    index-name: turknet-messaging-logs
 
 server:
   port: 8081

@@ -14,7 +14,7 @@ spring:
 
   data:
     mongodb:
-      uri: mongodb://admin:password@localhost:27017/turknet-messaging-db?authSource=admin
+      uri: mongodb://admin:password@mongodb:27017/turknet-messaging-db?authSource=admin
       database: turknet-messaging-db
 
   kafka:
@@ -41,6 +41,9 @@ app:
   session:
     expiration-hours: 24
     cleanup-interval-minutes: 60
+  elasticsearch:
+    url: http://elasticsearch:9200
+    index-name: turknet-messaging-logs
 
 logging:
   level:
@@ -86,7 +89,7 @@ spring:
       on-profile: staging
   data:
     mongodb:
-      uri: mongodb://admin:password@localhost:27017/turknet-messaging-db?authSource=admin
+      uri: mongodb://admin:password@mongodb:27017/turknet-messaging-db?authSource=admin
       database: turknet-messaging-db
   kafka:
     bootstrap-servers: kafka:9092
@@ -149,7 +152,7 @@ spring:
       on-profile: prod
   data:
     mongodb:
-      uri: mongodb://admin:password@localhost:27017/turknet-messaging-db?authSource=admin
+      uri: mongodb://admin:password@mongodb:27017/turknet-messaging-db?authSource=admin
       database: turknet-messaging-db
   kafka:
     bootstrap-servers: prod-kafka-cluster:9092
