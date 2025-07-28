@@ -1,4 +1,4 @@
-package com.github.melihemreguler.turknetmessagingservice.model;
+package com.github.melihemreguler.turknetmessagingservice.model.api;
 
 import java.util.Map;
 

@@ -1,4 +1,4 @@
-package com.github.melihemreguler.turknetmessagingservice.model;
+package com.github.melihemreguler.turknetmessagingservice.model.event;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 
@@ -6,7 +6,7 @@ import java.time.LocalDateTime;
 
 public record SessionEvent(
     String command,
-    String hashedSessionToken,
+    String hashedSessionId,
     String userId,
     LocalDateTime expiresAt,
     String ipAddress,
@@ -15,14 +15,14 @@ public record SessionEvent(
     LocalDateTime timestamp
 ) {
     public static SessionEvent create(
-            String hashedSessionToken,
+            String hashedSessionId,
             String userId,
             LocalDateTime expiresAt,
             String ipAddress,
             String userAgent) {
         return new SessionEvent(
             com.github.melihemreguler.turknetmessagingservice.enums.SessionCommand.SAVE_SESSION.getCommand(),
-            hashedSessionToken,
+            hashedSessionId,
             userId,
             expiresAt,
             ipAddress,
@@ -32,14 +32,14 @@ public record SessionEvent(
     }
     
     public static SessionEvent createOrUpdate(
-            String hashedSessionToken,
+            String hashedSessionId,
             String userId,
             LocalDateTime expiresAt,
             String ipAddress,
             String userAgent) {
         return new SessionEvent(
             com.github.melihemreguler.turknetmessagingservice.enums.SessionCommand.UPSERT_SESSION.getCommand(),
-            hashedSessionToken,
+            hashedSessionId,
             userId,
             expiresAt,
             ipAddress,

@@ -1,7 +1,6 @@
 package com.github.melihemreguler.turknetmessagingservice.interceptor;
 
 import com.github.melihemreguler.turknetmessagingservice.dto.SessionDto;
-import com.github.melihemreguler.turknetmessagingservice.dto.UserDto;
 import com.github.melihemreguler.turknetmessagingservice.service.SessionService;
 import com.github.melihemreguler.turknetmessagingservice.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -16,7 +15,7 @@ import java.util.Optional;
 @Component
 @RequiredArgsConstructor
 @Slf4j
-public class SessionTokenInterceptor implements HandlerInterceptor {
+public class SessionInterceptor implements HandlerInterceptor {
     
     private final SessionService sessionService;
     private final UserService userService;
