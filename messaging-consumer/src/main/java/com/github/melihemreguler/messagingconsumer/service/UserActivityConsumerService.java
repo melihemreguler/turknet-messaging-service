@@ -4,6 +4,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.github.melihemreguler.messagingconsumer.dto.ActivityLogDto;
 import com.github.melihemreguler.messagingconsumer.dto.UserDto;
+import com.github.melihemreguler.messagingconsumer.enums.ActivityType;
+import com.github.melihemreguler.messagingconsumer.enums.CommandType;
 import com.github.melihemreguler.messagingconsumer.model.UserActivityEvent;
 import com.github.melihemreguler.messagingconsumer.model.UserCreationEvent;
 import com.github.melihemreguler.messagingconsumer.repository.ActivityLogRepository;
@@ -15,6 +17,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Optional;
 
 @Service
 @Slf4j
@@ -37,7 +40,7 @@ public class UserActivityConsumerService {
         
         try {
             // First try to parse as UserCreationEvent for CREATE_USER command
-            if (message.contains("CREATE_USER")) {
+            if (message.contains(CommandType.CREATE_USER.getValue())) {
                 UserCreationEvent creationEvent = objectMapper.readValue(message, UserCreationEvent.class);
                 processUserCreationEvent(creationEvent);
                 return;
@@ -47,12 +50,16 @@ public class UserActivityConsumerService {
             UserActivityEvent event = objectMapper.readValue(message, UserActivityEvent.class);
             
             switch (event.getCommand()) {
-                case "LOG_USER_ACTIVITY" -> processUserActivityEvent(event);
+                case "LOG_USER_ACTIVITY" -> {
+                    if (CommandType.LOG_USER_ACTIVITY.getValue().equals(event.getCommand())) {
+                        processUserActivityEvent(event);
+                    }
+                }
                 default -> {
                     log.warn("Unknown user activity command: {}", event.getCommand());
                     // Try to parse with enum for validation
                     try {
-                        com.github.melihemreguler.messagingconsumer.enums.UserCommand.fromString(event.getCommand());
+                        CommandType.fromString(event.getCommand());
                     } catch (IllegalArgumentException e2) {
                         log.error("Command not found in enum: {}", event.getCommand());
                     }
@@ -64,36 +71,53 @@ public class UserActivityConsumerService {
     }
 
     private void processUserActivityEvent(UserActivityEvent event) {
-        ActivityLogDto activityLog = new ActivityLogDto();
-        activityLog.setUserId(event.getUserId());
-        activityLog.setIpAddress(event.getIpAddress());
-        activityLog.setUserAgent(event.getUserAgent());
-        activityLog.setSuccessful(event.isSuccessful());
-        activityLog.setTimestamp(event.getTimestamp());
-        activityLog.setFailureReason(event.getFailureReason());
-        activityLog.setAction("LOGIN_ATTEMPT");
+        Optional<ActivityLogDto> existingLogOpt = activityLogRepository.findByUserId(event.getUserId());
+        
+        ActivityLogDto activityLog;
+        if (existingLogOpt.isPresent()) {
+            activityLog = existingLogOpt.get();
+        } else {
+            activityLog = new ActivityLogDto(event.getUserId());
+        }
+        
+        activityLog.addActivity(
+            event.getIpAddress(),
+            event.getUserAgent(),
+            event.isSuccessful(),
+            event.getTimestamp(),
+            event.getFailureReason(),
+            ActivityType.LOGIN_ATTEMPT.getValue()
+        );
 
         ActivityLogDto savedLog = activityLogRepository.save(activityLog);
-        log.info("Activity log saved: {} for user ID: {} - Success: {}", 
-                savedLog.getId(), savedLog.getUserId(), savedLog.isSuccessful());
+        log.info("Activity log updated: {} for user ID: {} - Success: {}", 
+                savedLog.getId(), savedLog.getUserId(), event.isSuccessful());
     }
     
     private void processUserCreationEvent(UserCreationEvent event) {
         try {
-            // Log the user creation activity (no need to create user in DB since it's same database)
-            ActivityLogDto activityLog = new ActivityLogDto();
-            activityLog.setUserId(event.getUserId());
-            activityLog.setIpAddress(event.getIpAddress());
-            activityLog.setUserAgent(event.getUserAgent());
-            activityLog.setSuccessful(true);
+            Optional<ActivityLogDto> existingLogOpt = activityLogRepository.findByUserId(event.getUserId());
+            
+            ActivityLogDto activityLog;
+            if (existingLogOpt.isPresent()) {
+                activityLog = existingLogOpt.get();
+            } else {
+                activityLog = new ActivityLogDto(event.getUserId());
+            }
             
             LocalDateTime timestamp = LocalDateTime.parse(event.getTimestamp(), DateTimeFormatter.ISO_LOCAL_DATE_TIME);
-            activityLog.setTimestamp(timestamp);
-            activityLog.setFailureReason(null);
-            activityLog.setAction("USER_CREATION");
+            
+            activityLog.addActivity(
+                event.getIpAddress(),
+                event.getUserAgent(),
+                true,
+                timestamp,
+                null,
+                ActivityType.USER_CREATION.getValue()
+            );
 
             ActivityLogDto savedLog = activityLogRepository.save(activityLog);
-            log.info("User creation activity log saved: {} for user ID: {} ({})", 
+            log.info("User creation activity log updated: {} for user ID: {} ({})", 
                     savedLog.getId(), savedLog.getUserId(), event.getUsername());
             
         } catch (Exception e) {
