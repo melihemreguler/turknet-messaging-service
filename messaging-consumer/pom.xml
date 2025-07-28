@@ -126,7 +126,7 @@
                             <port>8081</port>
                         </ports>
                         <creationTime>USE_CURRENT_TIMESTAMP</creationTime>
-                        <mainClass>com.github.melihemreguler.messagingwriterservice.MessagingWriterServiceApplication</mainClass>
+                        <mainClass>com.github.melihemreguler.messagingconsumer.MessagingConsumerApplication</mainClass>
                     </container>
                 </configuration>
                 <executions>
