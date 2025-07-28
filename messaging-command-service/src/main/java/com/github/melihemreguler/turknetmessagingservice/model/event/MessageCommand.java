@@ -7,20 +7,23 @@ import java.time.LocalDateTime;
 public record MessageCommand(
     String command,
     String threadId,
-    String sender,
+    String senderId,
+    String senderUsername,
     String content,
     @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSSSS")
     LocalDateTime timestamp
 ) {
     public static MessageCommand create(
             String threadId,
-            String sender,
+            String senderId,
+            String senderUsername,
             String recipient,
             String content) {
         return new MessageCommand(
             com.github.melihemreguler.turknetmessagingservice.enums.MessageCommand.SEND_MESSAGE.getCommand(),
             threadId,
-            sender,
+            senderId,
+            senderUsername,
             content,
             LocalDateTime.now()
         );
