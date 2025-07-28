@@ -72,16 +72,66 @@ services:
       - mongodb-data:/data/db
       - mongodb-config:/data/configdb
 
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.11.0
+    container_name: elasticsearch
+    restart: always
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - xpack.security.enrollment.enabled=false
+      - cluster.name=turknet-messaging-cluster
+      - node.name=es-node-1
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - elasticsearch-data:/usr/share/elasticsearch/data
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.11.0
+    container_name: kibana
+    restart: always
+    ports:
+      - "5601:5601"
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+      - SERVER_NAME=kibana
+      - SERVER_HOST=0.0.0.0
+    depends_on:
+      - elasticsearch
+
+  elasticsearch-setup:
+    build:
+      context: .
+      dockerfile_inline: |
+        FROM alpine:latest
+        RUN apk add --no-cache curl bash
+        COPY scripts/elasticsearch-setup.sh /setup.sh
+        RUN chmod +x /setup.sh
+        CMD ["/setup.sh"]
+    depends_on:
+      - elasticsearch
+      - kibana
+    restart: "no"
+
   messaging-command-service:
     image: messaging-command-service:latest
     depends_on:
       - kafka
       - mongodb
+      - elasticsearch
       - kafka-create-topics
     ports:
       - "8080:8080"
     environment:
-      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_PROFILES_ACTIVE=local
     restart: unless-stopped
 
   messaging-consumer:
@@ -89,15 +139,18 @@ services:
     depends_on:
       - kafka
       - mongodb
+      - elasticsearch
       - kafka-create-topics
     ports:
       - "8081:8081"
     environment:
-      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_PROFILES_ACTIVE=local
     restart: unless-stopped
 
 volumes:
   mongodb-data:
     driver: local
   mongodb-config:
+    driver: local
+  elasticsearch-data:
     driver: local
