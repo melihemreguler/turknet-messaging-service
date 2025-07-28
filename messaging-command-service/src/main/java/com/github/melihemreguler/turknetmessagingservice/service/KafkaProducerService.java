@@ -25,31 +25,31 @@ public class KafkaProducerService {
         this.objectMapper.registerModule(new JavaTimeModule());
     }
     
-    public void sendMessageCommand(Object messageCommand) {
+    public void sendMessageCommand(Object messageCommand, String userId) {
         try {
             String jsonMessage = objectMapper.writeValueAsString(messageCommand);
-            kafkaTemplate.send(messagingConfig.getMessageCommands(), jsonMessage);
-            log.debug("Message command sent to topic: {}", messagingConfig.getMessageCommands());
+            kafkaTemplate.send(messagingConfig.getMessageCommands(), userId, jsonMessage);
+            log.debug("Message command sent to topic: {} with userId key: {}", messagingConfig.getMessageCommands(), userId);
         } catch (JsonProcessingException e) {
             log.error("Error serializing message command: {}", e.getMessage(), e);
         }
     }
     
-    public void sendUserCommand(Object userCommand) {
+    public void sendUserCommand(Object userCommand, String userId) {
         try {
             String jsonMessage = objectMapper.writeValueAsString(userCommand);
-            kafkaTemplate.send(messagingConfig.getUserCommands(), jsonMessage);
-            log.debug("User command sent to topic: {}", messagingConfig.getUserCommands());
+            kafkaTemplate.send(messagingConfig.getUserCommands(), userId, jsonMessage);
+            log.debug("User command sent to topic: {} with userId key: {}", messagingConfig.getUserCommands(), userId);
         } catch (JsonProcessingException e) {
             log.error("Error serializing user command: {}", e.getMessage(), e);
         }
     }
     
-    public void sendSessionCommand(Object sessionCommand) {
+    public void sendSessionCommand(Object sessionCommand, String userId) {
         try {
             String jsonMessage = objectMapper.writeValueAsString(sessionCommand);
-            kafkaTemplate.send(messagingConfig.getSessionCommands(), jsonMessage);
-            log.debug("Session command sent to topic: {}", messagingConfig.getSessionCommands());
+            kafkaTemplate.send(messagingConfig.getSessionCommands(), userId, jsonMessage);
+            log.debug("Session command sent to topic: {} with userId key: {}", messagingConfig.getSessionCommands(), userId);
         } catch (JsonProcessingException e) {
             log.error("Error serializing session command: {}", e.getMessage(), e);
         }
