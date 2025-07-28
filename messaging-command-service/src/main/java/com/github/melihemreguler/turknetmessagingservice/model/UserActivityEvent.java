@@ -1,16 +1,17 @@
 package com.github.melihemreguler.turknetmessagingservice.model;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+
 import java.time.LocalDateTime;
 
 public record UserActivityEvent(
     String command,
     String username,
     String userId,
-    String email,
-    String passwordHash,
     String ipAddress,
     String userAgent,
     boolean successful,
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSSSS")
     LocalDateTime timestamp,
     String failureReason
 ) {
@@ -22,37 +23,14 @@ public record UserActivityEvent(
             boolean successful,
             String failureReason) {
         return new UserActivityEvent(
-            "LOG_USER_ACTIVITY",
+            com.github.melihemreguler.turknetmessagingservice.enums.UserCommand.LOG_USER_ACTIVITY.getCommand(),
             username,
             userId,
-            null,
-            null,
             ipAddress,
             userAgent,
             successful,
             LocalDateTime.now(),
             failureReason
-        );
-    }
-    
-    public static UserActivityEvent createRegistration(
-            String username,
-            String userId,
-            String email,
-            String passwordHash,
-            String ipAddress,
-            String userAgent) {
-        return new UserActivityEvent(
-            "USER_REGISTERED",
-            username,
-            userId,
-            email,
-            passwordHash,
-            ipAddress,
-            userAgent,
-            true,
-            LocalDateTime.now(),
-            null
         );
     }
 }
