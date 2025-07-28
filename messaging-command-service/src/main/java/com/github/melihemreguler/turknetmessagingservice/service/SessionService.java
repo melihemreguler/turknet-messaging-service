@@ -31,25 +31,19 @@ public class SessionService {
     private int sessionCleanupIntervalMinutes;
     
     public String createSession(String userId, String username, String ipAddress, String userAgent) {
-        try {
-            // Generate new session token
-            String sessionToken = UUID.randomUUID().toString();
-            String hashedSessionToken = passwordEncoder.encode(sessionToken);
-            LocalDateTime expiresAt = LocalDateTime.now().plusHours(sessionExpirationHours);
-            
-            // Send upsert command to writer-service via Kafka
-            SessionEvent sessionEvent = SessionEvent.createOrUpdate(
-                hashedSessionToken, userId, expiresAt, ipAddress, userAgent);
-            
-            kafkaProducerService.sendSessionCommand(sessionEvent, userId);
-            
-            log.info("Session created/updated for user: {} (ID: {}) with expiration: {}", username, userId, expiresAt);
-            return sessionToken;
-            
-        } catch (Exception e) {
-            log.error("Error creating session for user {}: {}", username, e.getMessage(), e);
-            throw new RuntimeException("Failed to create session", e);
-        }
+        // Generate new session token
+        String sessionToken = UUID.randomUUID().toString();
+        String hashedSessionToken = passwordEncoder.encode(sessionToken);
+        LocalDateTime expiresAt = LocalDateTime.now().plusHours(sessionExpirationHours);
+        
+        // Send upsert command to writer-service via Kafka
+        SessionEvent sessionEvent = SessionEvent.createOrUpdate(
+            hashedSessionToken, userId, expiresAt, ipAddress, userAgent);
+        
+        kafkaProducerService.sendSessionCommand(sessionEvent, userId);
+        
+        log.info("Session created/updated for user: {} (ID: {}) with expiration: {}", username, userId, expiresAt);
+        return sessionToken;
     }
     
     public Optional<SessionDto> validateSession(String sessionToken) {
@@ -89,15 +83,11 @@ public class SessionService {
     }
     
     public void invalidateSession(String sessionToken) {
-        try {
-            Optional<SessionDto> sessionOpt = validateSession(sessionToken);
-            if (sessionOpt.isPresent()) {
-                SessionDto session = sessionOpt.get();
-                sessionRepository.delete(session);
-                log.info("Session invalidated for user: {}", session.getUserId());
-            }
-        } catch (Exception e) {
-            log.error("Error invalidating session: {}", e.getMessage(), e);
+        Optional<SessionDto> sessionOpt = validateSession(sessionToken);
+        if (sessionOpt.isPresent()) {
+            SessionDto session = sessionOpt.get();
+            sessionRepository.delete(session);
+            log.info("Session invalidated for user: {}", session.getUserId());
         }
     }
     
