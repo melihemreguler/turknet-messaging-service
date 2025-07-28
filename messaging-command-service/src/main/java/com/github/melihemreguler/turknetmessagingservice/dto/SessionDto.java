@@ -19,7 +19,7 @@ public class SessionDto {
     private String id;
 
     @Indexed(unique = true)
-    private String hashedSessionToken;
+    private String hashedSessionId;
 
     private String userId;
 
@@ -31,9 +31,9 @@ public class SessionDto {
 
     private String userAgent;
 
-    public SessionDto(String hashedSessionToken, String userId, 
-                     LocalDateTime expiresAt, String ipAddress, String userAgent) {
-        this.hashedSessionToken = hashedSessionToken;
+    public SessionDto(String hashedSessionId, String userId,
+                      LocalDateTime expiresAt, String ipAddress, String userAgent) {
+        this.hashedSessionId = hashedSessionId;
         this.userId = userId;
         this.createdAt = LocalDateTime.now();
         this.expiresAt = expiresAt;
