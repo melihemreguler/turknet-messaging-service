@@ -1,9 +1,8 @@
 package com.github.melihemreguler.turknetmessagingservice.controller;
 
 import com.github.melihemreguler.turknetmessagingservice.dto.MessageDto;
-import com.github.melihemreguler.turknetmessagingservice.model.ApiResponse;
-import com.github.melihemreguler.turknetmessagingservice.model.ConversationRequest;
-import com.github.melihemreguler.turknetmessagingservice.model.MessageRequest;
+import com.github.melihemreguler.turknetmessagingservice.enums.SessionConstants;
+import com.github.melihemreguler.turknetmessagingservice.model.api.*;
 import com.github.melihemreguler.turknetmessagingservice.service.MessageService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -14,8 +13,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-
 @RestController
 @RequestMapping("/api/messages")
 @RequiredArgsConstructor
@@ -23,83 +20,71 @@ import java.util.List;
 public class MessageController {
     
     private final MessageService messageService;
-    private static final String SESSION_TOKEN_HEADER = "X-Session-Token";
-    
     @PostMapping("/send")
-    public ResponseEntity<ApiResponse<MessageDto>> sendMessage(
+    public ResponseEntity<ApiResponse<MessageResponse>> sendMessage(
             @RequestBody @Valid MessageRequest request,
             HttpServletRequest httpRequest,
             HttpServletResponse httpResponse) {
         
-        // Get the authenticated user from the request attribute (set by interceptor)
-        String senderId = (String) httpRequest.getAttribute("currentUser");
+        String senderId = (String) httpRequest.getAttribute(SessionConstants.USER_ID_ATTRIBUTE.toString());
         
         log.info("Message send request from user ID {} to {}", senderId, request.recipient());
         MessageDto message = messageService.sendMessage(senderId, request);
         
-        // Add session token back to response header
-        String sessionToken = httpRequest.getHeader(SESSION_TOKEN_HEADER);
-        if (sessionToken != null) {
-            httpResponse.addHeader(SESSION_TOKEN_HEADER, sessionToken);
-        }
+        MessageResponse responseData = new MessageResponse(
+            message.getThreadId(),
+            message.getSenderId(),
+            message.getContent(),
+            message.getTimestamp()
+        );
         
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(ApiResponse.success("Message sent successfully", message));
+                .body(ApiResponse.success("Message sent successfully", responseData));
     }
     
-    @PostMapping("/conversation")
-    public ResponseEntity<ApiResponse<List<MessageDto>>> getConversation(
-            @RequestBody @Valid ConversationRequest request,
+    @GetMapping("/history")
+    public ResponseEntity<ApiResponse<PaginatedResponse<MessageDto>>> getConversation(
+            @RequestParam(required = false) String userId,
+            @RequestParam(required = false) String username,
+            @RequestParam(defaultValue = "50") Integer limit,
+            @RequestParam(defaultValue = "0") Integer offset,
             HttpServletRequest httpRequest,
             HttpServletResponse httpResponse) {
         
-        // Get the authenticated user from the request attribute (set by interceptor)
-        String currentUserId = (String) httpRequest.getAttribute("currentUser");
+        String currentUserId = (String) httpRequest.getAttribute(SessionConstants.USER_ID_ATTRIBUTE.toString());
         
-        // Ensure the current user is part of the conversation
-        if (!currentUserId.equals(request.user1()) && !currentUserId.equals(request.user2())) {
+        // Validate that at least one of userId or username is provided
+        if ((userId == null || userId.trim().isEmpty()) && (username == null || username.trim().isEmpty())) {
+            log.warn("User {} attempted to fetch conversation without providing userId or username", currentUserId);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(ApiResponse.error("Either userId or username parameter must be provided"));
+        }
+        
+        // Create ConversationRequest with current user as user1 and target user as user2
+        HistoryRequest request = new HistoryRequest(
+            currentUserId,    // user1Id - current user from interceptor
+            userId,          // user2Id - target user from query param
+            username,        // user2Username - target username from query param  
+            limit, 
+            offset
+        );
+        
+        // Get security info to validate access
+        MessageService.ConversationSecurityInfo securityInfo = messageService.getConversationSecurityInfo(request);
+        
+        // Ensure the current user is part of the conversation (should always be true since we set user1 as current user)
+        if (!securityInfo.isUserPartOfConversation(currentUserId)) {
             log.warn("User {} attempted to access conversation between {} and {}", 
-                    currentUserId, request.user1(), request.user2());
+                    currentUserId, securityInfo.getUser1Id(), securityInfo.getUser2Id());
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
                     .body(ApiResponse.error("Access denied to this conversation"));
         }
         
-        log.info("Fetching conversation between {} and {}", request.user1(), request.user2());
-        List<MessageDto> messages = messageService.getConversation(request.user1(), request.user2());
+        log.info("Fetching conversation between current user {} and target user {} (limit: {}, offset: {})", 
+                currentUserId, securityInfo.getUser2Id(), request.limit(), request.offset());
         
-        // Add session token back to response header
-        String sessionToken = httpRequest.getHeader(SESSION_TOKEN_HEADER);
-        if (sessionToken != null) {
-            httpResponse.addHeader(SESSION_TOKEN_HEADER, sessionToken);
-        }
+        PaginatedResponse<MessageDto> paginatedMessages = messageService.getConversationPaginated(request);
         
-        return ResponseEntity.ok(ApiResponse.success("Conversation retrieved successfully", messages));
-    }
-    
-    @GetMapping("/user/{userId}")
-    public ResponseEntity<ApiResponse<List<MessageDto>>> getUserMessages(
-            @PathVariable String userId,
-            HttpServletRequest httpRequest,
-            HttpServletResponse httpResponse) {
-        // Get the authenticated user from the request attribute (set by interceptor)
-        String currentUserId = (String) httpRequest.getAttribute("currentUser");
-        
-        // Ensure users can only access their own messages
-        if (!currentUserId.equals(userId)) {
-            log.warn("User {} attempted to access messages for user {}", currentUserId, userId);
-            return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                    .body(ApiResponse.error("Access denied to these messages"));
-        }
-        
-        log.info("Fetching messages for user ID: {}", userId);
-        List<MessageDto> messages = messageService.getUserMessages(userId);
-        
-        // Add session token back to response header
-        String sessionToken = httpRequest.getHeader(SESSION_TOKEN_HEADER);
-        if (sessionToken != null) {
-            httpResponse.addHeader(SESSION_TOKEN_HEADER, sessionToken);
-        }
-        
-        return ResponseEntity.ok(ApiResponse.success("User messages retrieved successfully", messages));
+        return ResponseEntity.ok(ApiResponse.success("Conversation retrieved successfully", paginatedMessages));
     }
 }
