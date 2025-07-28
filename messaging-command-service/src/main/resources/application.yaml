@@ -14,7 +14,7 @@ spring:
 
   data:
     mongodb:
-      uri: mongodb://admin:password@mongodb:27017/turknet-messaging-db?authSource=admin
+      uri: mongodb://admin:password@localhost:27017/turknet-messaging-db?authSource=admin
       database: turknet-messaging-db
 
   kafka:
@@ -86,8 +86,8 @@ spring:
       on-profile: staging
   data:
     mongodb:
-      uri: mongodb://admin:staging_password@staging-mongodb:27017/turknet-messaging-db-staging?authSource=admin
-      database: turknet-messaging-db-staging
+      uri: mongodb://admin:password@localhost:27017/turknet-messaging-db?authSource=admin
+      database: turknet-messaging-db
   kafka:
     bootstrap-servers: kafka:9092
 
@@ -149,8 +149,8 @@ spring:
       on-profile: prod
   data:
     mongodb:
-      uri: mongodb://admin:prod_secure_password@prod-mongodb-cluster:27017/turknet-messaging-db-prod?authSource=admin&ssl=true
-      database: turknet-messaging-db-prod
+      uri: mongodb://admin:password@localhost:27017/turknet-messaging-db?authSource=admin
+      database: turknet-messaging-db
   kafka:
     bootstrap-servers: prod-kafka-cluster:9092
 

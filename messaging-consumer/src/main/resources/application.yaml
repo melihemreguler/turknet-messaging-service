@@ -7,12 +7,8 @@ spring:
   
   data:
     mongodb:
-      host: mongodb
-      port: 27017
+      uri: mongodb://admin:password@localhost:27017/turknet-messaging-db?authSource=admin
       database: turknet-messaging-db
-      username: admin
-      password: password
-      authentication-database: admin
   
   kafka:
     bootstrap-servers: kafka:9092
@@ -61,12 +57,8 @@ spring:
 
   data:
     mongodb:
-      host: staging-mongodb
-      port: 27017
-      database: turknet-messaging-db-staging
-      username: admin
-      password: staging_password
-      authentication-database: admin
+      uri: mongodb://admin:password@localhost:27017/turknet-messaging-db?authSource=admin
+      database: turknet-messaging-db
   
   kafka:
     bootstrap-servers: kafka:9092
@@ -115,12 +107,8 @@ spring:
 
   data:
     mongodb:
-      host: prod-mongodb-cluster
-      port: 27017
-      database: turknet-messaging-db-prod
-      username: admin
-      password: prod_secure_password
-      authentication-database: admin
+      uri: mongodb://admin:password@localhost:27017/turknet-messaging-db?authSource=admin
+      database: turknet-messaging-db
   
   kafka:
     bootstrap-servers: prod-kafka-cluster:9092
