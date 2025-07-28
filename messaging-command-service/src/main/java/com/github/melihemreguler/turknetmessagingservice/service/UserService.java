@@ -4,6 +4,7 @@ import com.github.melihemreguler.turknetmessagingservice.dto.UserDto;
 import com.github.melihemreguler.turknetmessagingservice.model.UserRegisterRequest;
 import com.github.melihemreguler.turknetmessagingservice.model.LoginRequest;
 import com.github.melihemreguler.turknetmessagingservice.model.UserActivityEvent;
+import com.github.melihemreguler.turknetmessagingservice.model.UserCreationEvent;
 import com.github.melihemreguler.turknetmessagingservice.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -37,16 +38,15 @@ public class UserService {
             
             UserDto savedUser = userRepository.save(userDto);
             
-            // Send user registration event to Kafka with IP and User-Agent
-            UserActivityEvent registrationEvent = UserActivityEvent.createRegistration(
+            // Send user creation event to Kafka for activity logging
+            UserCreationEvent creationEvent = UserCreationEvent.create(
                 savedUser.getUsername(), 
                 savedUser.getId(),
                 request.email(),
-                savedUser.getPasswordHash(),
                 ipAddress,
                 userAgent
             );
-            kafkaProducerService.sendUserCommand(registrationEvent);
+            kafkaProducerService.sendUserCommand(creationEvent, savedUser.getId());
             
             log.info("User registered successfully: {}", savedUser.getUsername());
             return savedUser;
@@ -77,7 +77,7 @@ public class UserService {
         UserActivityEvent activityEvent = UserActivityEvent.create(
             username, userId, ipAddress, userAgent, result.isSuccessful(), result.getFailureReason());
         
-        kafkaProducerService.sendUserCommand(activityEvent);
+        kafkaProducerService.sendUserCommand(activityEvent, userId != null ? userId : "unknown");
         
         return new AuthenticationResult(result.isSuccessful(), result.getFailureReason(), sessionToken, userId);
     }
