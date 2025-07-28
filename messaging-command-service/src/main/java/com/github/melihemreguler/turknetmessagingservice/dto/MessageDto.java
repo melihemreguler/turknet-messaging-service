@@ -22,15 +22,18 @@ public class MessageDto {
     private String threadId;
 
     @Indexed
-    private String sender;
+    private String senderId;
+    
+    private String senderUsername;
 
     private String content;
 
     private LocalDateTime timestamp;
 
-    public MessageDto(String threadId, String sender, String content) {
+    public MessageDto(String threadId, String senderId, String senderUsername, String content) {
         this.threadId = threadId;
-        this.sender = sender;
+        this.senderId = senderId;
+        this.senderUsername = senderUsername;
         this.content = content;
         this.timestamp = LocalDateTime.now();
     }
