@@ -12,6 +12,9 @@ import org.springframework.context.annotation.Configuration;
 public class MessagingConfig {
     // Command topics for write operations
     private String userCommands;
+    private String userCommandsRetry;
     private String messageCommands;
+    private String messageCommandsRetry;
     private String sessionCommands;
+    private String sessionCommandsRetry;
 }
