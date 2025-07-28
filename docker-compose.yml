@@ -84,8 +84,8 @@ services:
       - SPRING_PROFILES_ACTIVE=docker
     restart: unless-stopped
 
-  messaging-writer-service:
-    image: messaging-writer-service:latest
+  messaging-consumer:
+    image: messaging-consumer:latest
     depends_on:
       - kafka
       - mongodb
