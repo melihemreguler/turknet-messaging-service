@@ -12,7 +12,7 @@ import java.util.Optional;
 @Repository
 public interface SessionRepository extends MongoRepository<SessionDto, String> {
     
-    Optional<SessionDto> findByHashedSessionToken(String hashedSessionToken);
+    Optional<SessionDto> findByHashedSessionId(String hashedSessionId);
     
     List<SessionDto> findByUserId(String userId);
 }
