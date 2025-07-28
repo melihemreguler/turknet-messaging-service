@@ -20,7 +20,8 @@ public class MessageDto {
     private String id;
 
     private String threadId;
-    private String sender;
+    private String senderId;
+    private String senderUsername;
     private String content;
     private LocalDateTime timestamp;
     private String status;
