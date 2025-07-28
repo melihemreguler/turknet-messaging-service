@@ -7,7 +7,7 @@ spring:
   
   data:
     mongodb:
-      host: localhost
+      host: mongodb
       port: 27017
       database: turknet-messaging-db
       username: admin
@@ -15,7 +15,7 @@ spring:
       authentication-database: admin
   
   kafka:
-    bootstrap-servers: localhost:29092
+    bootstrap-servers: kafka:9092
     consumer:
       group-id: messaging-consumer-group
       auto-offset-reset: earliest
@@ -57,21 +57,21 @@ logging:
 spring:
   config:
     activate:
-      on-profile: docker
+      on-profile: staging
 
   data:
     mongodb:
-      host: mongodb
+      host: staging-mongodb
       port: 27017
-      database: turknet-messaging-db
+      database: turknet-messaging-db-staging
       username: admin
-      password: password
+      password: staging_password
       authentication-database: admin
   
   kafka:
     bootstrap-servers: kafka:9092
     consumer:
-      group-id: messaging-consumer-group
+      group-id: messaging-consumer-group-staging
       auto-offset-reset: earliest
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
@@ -79,12 +79,84 @@ spring:
 app:
   kafka:
     topics:
-      message-commands: turknet.transformers.message.commands.0
-      message-commands-retry: turknet.transformers.message.commands.retry.0
-      user-commands: turknet.transformers.user.commands.0
-      user-commands-retry: turknet.transformers.user.commands.retry.0
-      session-commands: turknet.transformers.session.commands.0
-      session-commands-retry: turknet.transformers.session.commands.retry.0
+      message-commands: turknet.transformers.message.commands.staging.0
+      message-commands-retry: turknet.transformers.message.commands.retry.staging.0
+      user-commands: turknet.transformers.user.commands.staging.0
+      user-commands-retry: turknet.transformers.user.commands.retry.staging.0
+      session-commands: turknet.transformers.session.commands.staging.0
+      session-commands-retry: turknet.transformers.session.commands.retry.staging.0
     retry:
       max-retry: 5
       cron: "*/10 * * * *"
+
+server:
+  port: 8081
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: always
+
+logging:
+  level:
+    com.github.melihemreguler.messagingconsumer: INFO
+    org.springframework.kafka: INFO
+    org.apache.kafka: WARN
+
+---
+spring:
+  config:
+    activate:
+      on-profile: prod
+
+  data:
+    mongodb:
+      host: prod-mongodb-cluster
+      port: 27017
+      database: turknet-messaging-db-prod
+      username: admin
+      password: prod_secure_password
+      authentication-database: admin
+  
+  kafka:
+    bootstrap-servers: prod-kafka-cluster:9092
+    consumer:
+      group-id: messaging-consumer-group-prod
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+
+app:
+  kafka:
+    topics:
+      message-commands: turknet.transformers.message.commands.prod.0
+      message-commands-retry: turknet.transformers.message.commands.retry.prod.0
+      user-commands: turknet.transformers.user.commands.prod.0
+      user-commands-retry: turknet.transformers.user.commands.retry.prod.0
+      session-commands: turknet.transformers.session.commands.prod.0
+      session-commands-retry: turknet.transformers.session.commands.retry.prod.0
+    retry:
+      max-retry: 3
+      cron: "*/30 * * * *"
+
+server:
+  port: 8081
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: never
+
+logging:
+  level:
+    com.github.melihemreguler.messagingconsumer: WARN
+    org.springframework.kafka: WARN
+    org.apache.kafka: ERROR

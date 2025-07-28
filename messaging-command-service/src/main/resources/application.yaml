@@ -14,11 +14,11 @@ spring:
 
   data:
     mongodb:
-      uri: mongodb://admin:password@localhost:27017/turknet-messaging-db?authSource=admin
+      uri: mongodb://admin:password@mongodb:27017/turknet-messaging-db?authSource=admin
       database: turknet-messaging-db
 
   kafka:
-    bootstrap-servers: localhost:29092
+    bootstrap-servers: kafka:9092
     consumer:
       group-id: turknet-messaging-group
       auto-offset-reset: earliest
@@ -32,16 +32,15 @@ spring:
 app:
   kafka:
     topics:
-      # Command topics - for sending commands to consumer services
-      user-commands: ${USER_COMMANDS_TOPIC:turknet.transformers.user.commands.0}
-      user-commands-retry: ${USER_COMMANDS_RETRY_TOPIC:turknet.transformers.user.commands.retry.0}
-      message-commands: ${MESSAGE_COMMANDS_TOPIC:turknet.transformers.message.commands.0}
-      message-commands-retry: ${MESSAGE_COMMANDS_RETRY_TOPIC:turknet.transformers.message.commands.retry.0}
-      session-commands: ${SESSION_COMMANDS_TOPIC:turknet.transformers.session.commands.0}
-      session-commands-retry: ${SESSION_COMMANDS_RETRY_TOPIC:turknet.transformers.session.commands.retry.0}
+      user-commands: turknet.transformers.user.commands.0
+      user-commands-retry: turknet.transformers.user.commands.retry.0
+      message-commands: turknet.transformers.message.commands.0
+      message-commands-retry: turknet.transformers.message.commands.retry.0
+      session-commands: turknet.transformers.session.commands.0
+      session-commands-retry: turknet.transformers.session.commands.retry.0
   session:
-    expiration-hours: ${SESSION_EXPIRATION_HOURS:24}
-    cleanup-interval-minutes: ${SESSION_CLEANUP_INTERVAL_MINUTES:60}
+    expiration-hours: 24
+    cleanup-interval-minutes: 60
 
 logging:
   level:
@@ -56,10 +55,9 @@ springdoc:
     enabled: true
     path: /v3/api-docs
 
-# Actuator configuration for health checks
 management:
   server:
-    port: 8080  # Same port as main application
+    port: 8080
   endpoints:
     web:
       base-path: /actuator
@@ -82,46 +80,44 @@ management:
       enabled: true
 
 ---
-# Docker profile configuration
 spring:
   config:
     activate:
-      on-profile: docker
+      on-profile: staging
   data:
     mongodb:
-      uri: mongodb://admin:password@mongodb:27017/turknet-messaging-db?authSource=admin
+      uri: mongodb://admin:staging_password@staging-mongodb:27017/turknet-messaging-db-staging?authSource=admin
+      database: turknet-messaging-db-staging
   kafka:
     bootstrap-servers: kafka:9092
 
 app:
   kafka:
     topics:
-      # Command topics - for sending commands to consumer services
-      user-commands: ${USER_COMMANDS_TOPIC:turknet.transformers.user.commands.0}
-      user-commands-retry: ${USER_COMMANDS_RETRY_TOPIC:turknet.transformers.user.commands.retry.0}
-      message-commands: ${MESSAGE_COMMANDS_TOPIC:turknet.transformers.message.commands.0}
-      message-commands-retry: ${MESSAGE_COMMANDS_RETRY_TOPIC:turknet.transformers.message.commands.retry.0}
-      session-commands: ${SESSION_COMMANDS_TOPIC:turknet.transformers.session.commands.0}
-      session-commands-retry: ${SESSION_COMMANDS_RETRY_TOPIC:turknet.transformers.session.commands.retry.0}
+      user-commands: turknet.transformers.user.commands.staging.0
+      user-commands-retry: turknet.transformers.user.commands.retry.staging.0
+      message-commands: turknet.transformers.message.commands.staging.0
+      message-commands-retry: turknet.transformers.message.commands.retry.staging.0
+      session-commands: turknet.transformers.session.commands.staging.0
+      session-commands-retry: turknet.transformers.session.commands.retry.staging.0
 
   session:
-    expiration-hours: ${SESSION_EXPIRATION_HOURS:24}
-    cleanup-interval-minutes: ${SESSION_CLEANUP_INTERVAL_MINUTES:60}
+    expiration-hours: 24
+    cleanup-interval-minutes: 60
 
 logging:
   level:
     root: INFO
-    com.github.melihemreguler.turknetmessagingservice: INFO  # Production'da DEBUG yerine INFO
+    com.github.melihemreguler.turknetmessagingservice: INFO
 
 springdoc:
   swagger-ui:
-    enabled: ${SWAGGER_ENABLED:false}  # Production'da varsayılan olarak kapalı
+    enabled: true
     path: /api/swagger-ui.html
   api-docs:
-    enabled: ${SWAGGER_ENABLED:false}
+    enabled: true
     path: /v3/api-docs
 
-# Actuator configuration for health checks
 management:
   server:
     port: 8080
@@ -129,11 +125,74 @@ management:
     web:
       base-path: /actuator
       exposure:
-        include: health,info,readiness,liveness  # Production'da sınırlı exposure
+        include: health,info,readiness,liveness
   endpoint:
     health:
-      show-details: ${HEALTH_SHOW_DETAILS:when-authorized}  # Production'da güvenli
-      show-components: ${HEALTH_SHOW_COMPONENTS:when-authorized}
+      show-details: always
+      show-components: always
+      probes:
+        enabled: true
+    readiness:
+      enabled: true
+    liveness:
+      enabled: true
+  health:
+    readinessstate:
+      enabled: true
+    livenessstate:
+      enabled: true
+
+---
+spring:
+  config:
+    activate:
+      on-profile: prod
+  data:
+    mongodb:
+      uri: mongodb://admin:prod_secure_password@prod-mongodb-cluster:27017/turknet-messaging-db-prod?authSource=admin&ssl=true
+      database: turknet-messaging-db-prod
+  kafka:
+    bootstrap-servers: prod-kafka-cluster:9092
+
+app:
+  kafka:
+    topics:
+      user-commands: turknet.transformers.user.commands.prod.0
+      user-commands-retry: turknet.transformers.user.commands.retry.prod.0
+      message-commands: turknet.transformers.message.commands.prod.0
+      message-commands-retry: turknet.transformers.message.commands.retry.prod.0
+      session-commands: turknet.transformers.session.commands.prod.0
+      session-commands-retry: turknet.transformers.session.commands.retry.prod.0
+
+  session:
+    expiration-hours: 24
+    cleanup-interval-minutes: 60
+
+logging:
+  level:
+    root: WARN
+    com.github.melihemreguler.turknetmessagingservice: INFO
+
+springdoc:
+  swagger-ui:
+    enabled: false
+    path: /api/swagger-ui.html
+  api-docs:
+    enabled: false
+    path: /v3/api-docs
+
+management:
+  server:
+    port: 8080
+  endpoints:
+    web:
+      base-path: /actuator
+      exposure:
+        include: health,readiness,liveness
+  endpoint:
+    health:
+      show-details: never
+      show-components: never
       probes:
         enabled: true
     readiness:
