@@ -5,6 +5,7 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.github.melihemreguler.messagingwriterservice.dto.ActivityLogDto;
 import com.github.melihemreguler.messagingwriterservice.dto.UserDto;
 import com.github.melihemreguler.messagingwriterservice.model.UserActivityEvent;
+import com.github.melihemreguler.messagingwriterservice.model.UserCreationEvent;
 import com.github.melihemreguler.messagingwriterservice.repository.ActivityLogRepository;
 import com.github.melihemreguler.messagingwriterservice.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -13,6 +14,7 @@ import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 @Service
 @Slf4j
@@ -34,12 +36,27 @@ public class UserActivityConsumerService {
         log.info("Received user activity: {}", message);
         
         try {
+            // First try to parse as UserCreationEvent for CREATE_USER command
+            if (message.contains("CREATE_USER")) {
+                UserCreationEvent creationEvent = objectMapper.readValue(message, UserCreationEvent.class);
+                processUserCreationEvent(creationEvent);
+                return;
+            }
+            
+            // Parse as UserActivityEvent for other commands
             UserActivityEvent event = objectMapper.readValue(message, UserActivityEvent.class);
             
             switch (event.getCommand()) {
                 case "LOG_USER_ACTIVITY" -> processUserActivityEvent(event);
-                case "USER_REGISTERED" -> processUserRegistrationEvent(event);
-                default -> log.warn("Unknown user activity command: {}", event.getCommand());
+                default -> {
+                    log.warn("Unknown user activity command: {}", event.getCommand());
+                    // Try to parse with enum for validation
+                    try {
+                        com.github.melihemreguler.messagingwriterservice.enums.UserCommand.fromString(event.getCommand());
+                    } catch (IllegalArgumentException e2) {
+                        log.error("Command not found in enum: {}", event.getCommand());
+                    }
+                }
             }
         } catch (Exception e) {
             log.error("Error processing user activity: {}", e.getMessage(), e);
@@ -61,36 +78,26 @@ public class UserActivityConsumerService {
                 savedLog.getId(), savedLog.getUserId(), savedLog.isSuccessful());
     }
     
-    private void processUserRegistrationEvent(UserActivityEvent event) {
+    private void processUserCreationEvent(UserCreationEvent event) {
         try {
-            // Save user to database
-            UserDto user = new UserDto();
-            user.setId(event.getUserId());
-            user.setUsername(event.getUsername());
-            user.setEmail(event.getEmail());
-            user.setPasswordHash(event.getPasswordHash());
-            user.setCreatedAt(event.getTimestamp());
-            user.setUpdatedAt(event.getTimestamp());
-            
-            UserDto savedUser = userRepository.save(user);
-            log.info("User saved to writer database: {} (ID: {})", savedUser.getUsername(), savedUser.getId());
-            
-            // Also log the registration activity
+            // Log the user creation activity (no need to create user in DB since it's same database)
             ActivityLogDto activityLog = new ActivityLogDto();
             activityLog.setUserId(event.getUserId());
             activityLog.setIpAddress(event.getIpAddress());
             activityLog.setUserAgent(event.getUserAgent());
             activityLog.setSuccessful(true);
-            activityLog.setTimestamp(event.getTimestamp());
+            
+            LocalDateTime timestamp = LocalDateTime.parse(event.getTimestamp(), DateTimeFormatter.ISO_LOCAL_DATE_TIME);
+            activityLog.setTimestamp(timestamp);
             activityLog.setFailureReason(null);
-            activityLog.setAction("USER_REGISTRATION");
+            activityLog.setAction("USER_CREATION");
 
             ActivityLogDto savedLog = activityLogRepository.save(activityLog);
-            log.info("Registration activity log saved: {} for user ID: {}", 
-                    savedLog.getId(), savedLog.getUserId());
+            log.info("User creation activity log saved: {} for user ID: {} ({})", 
+                    savedLog.getId(), savedLog.getUserId(), event.getUsername());
             
         } catch (Exception e) {
-            log.error("Error processing user registration event for user {}: {}", event.getUsername(), e.getMessage(), e);
+            log.error("Error processing user creation event for user {}: {}", event.getUsername(), e.getMessage(), e);
         }
     }
 }
