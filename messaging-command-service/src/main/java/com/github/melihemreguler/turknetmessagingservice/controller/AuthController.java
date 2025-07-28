@@ -1,6 +1,7 @@
 package com.github.melihemreguler.turknetmessagingservice.controller;
 
 import com.github.melihemreguler.turknetmessagingservice.dto.UserDto;
+import com.github.melihemreguler.turknetmessagingservice.dto.UserResponseDto;
 import com.github.melihemreguler.turknetmessagingservice.model.ApiResponse;
 import com.github.melihemreguler.turknetmessagingservice.model.UserRegisterRequest;
 import com.github.melihemreguler.turknetmessagingservice.model.LoginRequest;
@@ -28,8 +29,8 @@ public class AuthController {
     private static final String USER_ID_HEADER = "X-User-Id";
     
     @PostMapping("/register")
-    public ResponseEntity<ApiResponse<UserDto>> registerUser(@RequestBody @Valid UserRegisterRequest request,
-                                                            HttpServletRequest httpRequest) {
+    public ResponseEntity<ApiResponse<UserResponseDto>> registerUser(@RequestBody @Valid UserRegisterRequest request,
+                                                                    HttpServletRequest httpRequest) {
         try {
             log.info("User registration request received for username: {}", request.username());
             
@@ -42,11 +43,7 @@ public class AuthController {
             // Create session for the newly registered user
             String sessionToken = sessionService.createSession(user.getId(), user.getUsername(), ipAddress, userAgent);
             
-            UserDto responseUser = new UserDto();
-            responseUser.setId(user.getId());
-            responseUser.setUsername(user.getUsername());
-            responseUser.setCreatedAt(user.getCreatedAt());
-            responseUser.setPasswordHash(null);
+            UserResponseDto responseUser = UserResponseDto.fromUserDto(user);
             
             // Add session token and userId to response headers
             HttpHeaders headers = new HttpHeaders();
@@ -86,7 +83,7 @@ public class AuthController {
                 
                 return ResponseEntity.ok()
                         .headers(headers)
-                        .body(ApiResponse.success("Login successful", "Authentication successful"));
+                        .body(ApiResponse.success("Login successful", result.getUserId()));
             } else {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                         .body(ApiResponse.error("Invalid credentials"));
