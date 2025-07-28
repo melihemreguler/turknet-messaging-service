@@ -1,6 +1,7 @@
 package com.github.melihemreguler.turknetmessagingservice.service;
 
 import com.github.melihemreguler.turknetmessagingservice.config.MessagingConfig;
+import com.github.melihemreguler.turknetmessagingservice.exception.MessageSerializationException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
@@ -31,7 +32,7 @@ public class KafkaProducerService {
             kafkaTemplate.send(messagingConfig.getMessageCommands(), userId, jsonMessage);
             log.debug("Message command sent to topic: {} with userId key: {}", messagingConfig.getMessageCommands(), userId);
         } catch (JsonProcessingException e) {
-            log.error("Error serializing message command: {}", e.getMessage(), e);
+            throw new MessageSerializationException("Failed to serialize message command", e);
         }
     }
     
@@ -41,7 +42,7 @@ public class KafkaProducerService {
             kafkaTemplate.send(messagingConfig.getUserCommands(), userId, jsonMessage);
             log.debug("User command sent to topic: {} with userId key: {}", messagingConfig.getUserCommands(), userId);
         } catch (JsonProcessingException e) {
-            log.error("Error serializing user command: {}", e.getMessage(), e);
+            throw new MessageSerializationException("Failed to serialize user command", e);
         }
     }
     
@@ -51,7 +52,7 @@ public class KafkaProducerService {
             kafkaTemplate.send(messagingConfig.getSessionCommands(), userId, jsonMessage);
             log.debug("Session command sent to topic: {} with userId key: {}", messagingConfig.getSessionCommands(), userId);
         } catch (JsonProcessingException e) {
-            log.error("Error serializing session command: {}", e.getMessage(), e);
+            throw new MessageSerializationException("Failed to serialize session command", e);
         }
     }
 }
