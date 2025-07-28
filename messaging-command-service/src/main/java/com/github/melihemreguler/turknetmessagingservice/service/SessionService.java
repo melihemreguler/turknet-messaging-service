@@ -1,7 +1,7 @@
 package com.github.melihemreguler.turknetmessagingservice.service;
 
 import com.github.melihemreguler.turknetmessagingservice.dto.SessionDto;
-import com.github.melihemreguler.turknetmessagingservice.model.SessionEvent;
+import com.github.melihemreguler.turknetmessagingservice.model.event.SessionEvent;
 import com.github.melihemreguler.turknetmessagingservice.repository.SessionRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -33,12 +33,12 @@ public class SessionService {
     public String createSession(String userId, String username, String ipAddress, String userAgent) {
         // Generate new session token
         String sessionToken = UUID.randomUUID().toString();
-        String hashedSessionToken = passwordEncoder.encode(sessionToken);
+        String hashedSessionId = passwordEncoder.encode(sessionToken);
         LocalDateTime expiresAt = LocalDateTime.now().plusHours(sessionExpirationHours);
         
         // Send upsert command to writer-service via Kafka
         SessionEvent sessionEvent = SessionEvent.createOrUpdate(
-            hashedSessionToken, userId, expiresAt, ipAddress, userAgent);
+            hashedSessionId, userId, expiresAt, ipAddress, userAgent);
         
         kafkaProducerService.sendSessionCommand(sessionEvent, userId);
         
@@ -46,8 +46,8 @@ public class SessionService {
         return sessionToken;
     }
     
-    public Optional<SessionDto> validateSession(String sessionToken) {
-        if (sessionToken == null || sessionToken.trim().isEmpty()) {
+    public Optional<SessionDto> validateSession(String sessionId) {
+        if (sessionId == null || sessionId.trim().isEmpty()) {
             return Optional.empty();
         }
         
@@ -55,7 +55,7 @@ public class SessionService {
             // Find session by checking all sessions and matching the hashed token
             return sessionRepository.findAll().stream()
                 .filter(session -> !session.isExpired())
-                .filter(session -> passwordEncoder.matches(sessionToken, session.getHashedSessionToken()))
+                .filter(session -> passwordEncoder.matches(sessionId, session.getHashedSessionId()))
                 .findFirst();
                 
         } catch (Exception e) {
@@ -64,8 +64,8 @@ public class SessionService {
         }
     }
 
-    public Optional<SessionDto> validateSession(String sessionToken, String userId) {
-        if (sessionToken == null || sessionToken.trim().isEmpty() || userId == null || userId.trim().isEmpty()) {
+    public Optional<SessionDto> validateSession(String sessionId, String userId) {
+        if (sessionId == null || sessionId.trim().isEmpty() || userId == null || userId.trim().isEmpty()) {
             return Optional.empty();
         }
         
@@ -73,7 +73,7 @@ public class SessionService {
             // Find sessions only for the specific user and match the hashed token
             return sessionRepository.findByUserId(userId).stream()
                 .filter(session -> !session.isExpired())
-                .filter(session -> passwordEncoder.matches(sessionToken, session.getHashedSessionToken()))
+                .filter(session -> passwordEncoder.matches(sessionId, session.getHashedSessionId()))
                 .findFirst();
                 
         } catch (Exception e) {
@@ -82,8 +82,8 @@ public class SessionService {
         }
     }
     
-    public void invalidateSession(String sessionToken) {
-        Optional<SessionDto> sessionOpt = validateSession(sessionToken);
+    public void invalidateSession(String sessionId) {
+        Optional<SessionDto> sessionOpt = validateSession(sessionId);
         if (sessionOpt.isPresent()) {
             SessionDto session = sessionOpt.get();
             sessionRepository.delete(session);
