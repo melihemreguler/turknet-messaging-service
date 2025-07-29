@@ -25,8 +25,20 @@ public class UserActivityEvent {
     
     private String failureReason;
     
+    // Optional fields for user creation
+    private String email; // For user creation events
+    
     @JsonProperty("command")
     public String getCommand() {
         return command;
+    }
+    
+    // Helper methods to determine activity type
+    public boolean isUserCreation() {
+        return "USER_CREATION".equals(command);
+    }
+    
+    public boolean isLoginAttempt() {
+        return "LOGIN_ATTEMPT".equals(command);
     }
 }
