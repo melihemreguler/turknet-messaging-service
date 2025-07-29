@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -47,7 +48,7 @@ public class SessionService {
     }
     
     public Optional<SessionDto> validateSession(String sessionId) {
-        if (sessionId == null || sessionId.trim().isEmpty()) {
+        if (isNullOrEmpty(sessionId)) {
             return Optional.empty();
         }
         
@@ -65,7 +66,7 @@ public class SessionService {
     }
 
     public Optional<SessionDto> validateSession(String sessionId, String userId) {
-        if (sessionId == null || sessionId.trim().isEmpty() || userId == null || userId.trim().isEmpty()) {
+        if (isNullOrEmpty(sessionId) || isNullOrEmpty(userId)) {
             return Optional.empty();
         }
         
@@ -100,8 +101,6 @@ public class SessionService {
             if (!expiredSessions.isEmpty()) {
                 sessionRepository.deleteAll(expiredSessions);
                 log.info("Cleaned up {} expired sessions", expiredSessions.size());
-            } else {
-                log.debug("No expired sessions found during cleanup");
             }
         } catch (Exception e) {
             log.error("Error cleaning up expired sessions: {}", e.getMessage(), e);
@@ -112,5 +111,9 @@ public class SessionService {
     public void scheduledCleanupExpiredSessions() {
         log.debug("Running scheduled session cleanup (interval: {} minutes)", sessionCleanupIntervalMinutes);
         cleanupExpiredSessions();
+    }
+    
+    private boolean isNullOrEmpty(String value) {
+        return Objects.isNull(value) || value.isEmpty();
     }
 }
