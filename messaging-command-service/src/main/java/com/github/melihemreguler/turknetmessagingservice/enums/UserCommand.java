@@ -1,8 +1,8 @@
 package com.github.melihemreguler.turknetmessagingservice.enums;
 
 public enum UserCommand {
-    LOG_USER_ACTIVITY("LOG_USER_ACTIVITY"),
-    CREATE_USER("CREATE_USER");
+    USER_CREATION("USER_CREATION"),
+    LOGIN_ATTEMPT("LOGIN_ATTEMPT");
 
     private final String command;
 
