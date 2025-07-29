@@ -1,7 +1,7 @@
 package com.github.melihemreguler.turknetmessagingservice.exception;
 
-import com.github.melihemreguler.turknetmessagingservice.model.api.ApiResponse;
-import com.github.melihemreguler.turknetmessagingservice.model.api.ValidationErrorResponse;
+import com.github.melihemreguler.turknetmessagingservice.model.response.ApiResponse;
+import com.github.melihemreguler.turknetmessagingservice.model.response.ValidationErrorResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -65,8 +65,23 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(MessageSerializationException.class)
     public ResponseEntity<ApiResponse<Void>> handleMessageSerializationException(MessageSerializationException ex) {
         log.error("Message serialization error: {}", ex.getMessage(), ex);
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)
                 .body(ApiResponse.error("Failed to process message"));
+    }
+
+    @ExceptionHandler(KafkaPublishingException.class)
+    public ResponseEntity<ApiResponse<Void>> handleKafkaPublishingException(KafkaPublishingException ex) {
+        log.error("Kafka publishing error: {}", ex.getMessage(), ex);
+        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
+                .body(ApiResponse.error("Message delivery service temporarily unavailable"));
+    }
+
+    @ExceptionHandler(BaseTurknetMessagingException.class)
+    public ResponseEntity<ApiResponse<Void>> handleBaseTurknetMessagingException(BaseTurknetMessagingException ex) {
+        log.error("Turknet messaging error [{}]: {} (ErrorCode: {})", 
+                ex.getExceptionType(), ex.getMessage(), ex.getErrorCode(), ex);
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(ApiResponse.error("Service error occurred: " + ex.getMessage()));
     }
 
     @ExceptionHandler(NoHandlerFoundException.class)
