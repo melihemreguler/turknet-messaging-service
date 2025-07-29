@@ -32,7 +32,7 @@ services:
     ports:
       - "8082:8080"
     environment:
-      KAFKA_CLUSTERS_0_NAME: local
+      KAFKA_CLUSTERS_0_NAME: docker
       KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
 
   kafka-create-topics:
@@ -131,7 +131,7 @@ services:
     ports:
       - "8080:8080"
     environment:
-      - SPRING_PROFILES_ACTIVE=local
+      - SPRING_PROFILES_ACTIVE=docker
     restart: unless-stopped
 
   messaging-consumer:
@@ -144,7 +144,7 @@ services:
     ports:
       - "8081:8081"
     environment:
-      - SPRING_PROFILES_ACTIVE=local
+      - SPRING_PROFILES_ACTIVE=docker
     restart: unless-stopped
 
 volumes:
