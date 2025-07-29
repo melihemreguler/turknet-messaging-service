@@ -11,14 +11,10 @@ spring:
     name: turknet-messaging-service
   profiles:
     active: local
-
   data:
     mongodb:
-      uri: mongodb://admin:password@mongodb:27017/turknet-messaging-db?authSource=admin
       database: turknet-messaging-db
-
   kafka:
-    bootstrap-servers: kafka:9092
     consumer:
       group-id: turknet-messaging-group
       auto-offset-reset: earliest
@@ -29,33 +25,18 @@ spring:
       value-serializer: org.apache.kafka.common.serialization.StringSerializer
       acks: all
       retries: 3
+
 app:
-  kafka:
-    topics:
-      user-commands: turknet.transformers.user.commands.0
-      user-commands-retry: turknet.transformers.user.commands.retry.0
-      message-commands: turknet.transformers.message.commands.0
-      message-commands-retry: turknet.transformers.message.commands.retry.0
-      session-commands: turknet.transformers.session.commands.0
-      session-commands-retry: turknet.transformers.session.commands.retry.0
   session:
     expiration-hours: 24
     cleanup-interval-minutes: 60
   elasticsearch:
-    url: http://elasticsearch:9200
     index-name: turknet-messaging-logs
-
-logging:
-  level:
-    root: INFO
-    com.github.melihemreguler.turknetmessagingservice: DEBUG
 
 springdoc:
   swagger-ui:
-    enabled: true
     path: /api/swagger-ui.html
   api-docs:
-    enabled: true
     path: /v3/api-docs
 
 management:
@@ -86,11 +67,78 @@ management:
 spring:
   config:
     activate:
+      on-profile: local
+  data:
+    mongodb:
+      uri: mongodb://admin:password@localhost:27017/turknet-messaging-db?authSource=admin
+  kafka:
+    bootstrap-servers: localhost:29092
+
+app:
+  kafka:
+    topics:
+      user-commands: turknet.transformers.user.commands.0
+      user-commands-retry: turknet.transformers.user.commands.retry.0
+      message-commands: turknet.transformers.message.commands.0
+      message-commands-retry: turknet.transformers.message.commands.retry.0
+      session-commands: turknet.transformers.session.commands.0
+      session-commands-retry: turknet.transformers.session.commands.retry.0
+  elasticsearch:
+    url: http://localhost:9200
+
+logging:
+  level:
+    root: INFO
+    com.github.melihemreguler.turknetmessagingservice: DEBUG
+
+springdoc:
+  swagger-ui:
+    enabled: true
+  api-docs:
+    enabled: true
+
+---
+spring:
+  config:
+    activate:
+      on-profile: docker
+  data:
+    mongodb:
+      uri: mongodb://admin:password@mongodb:27017/turknet-messaging-db?authSource=admin
+  kafka:
+    bootstrap-servers: kafka:9092
+
+app:
+  kafka:
+    topics:
+      user-commands: turknet.transformers.user.commands.0
+      user-commands-retry: turknet.transformers.user.commands.retry.0
+      message-commands: turknet.transformers.message.commands.0
+      message-commands-retry: turknet.transformers.message.commands.retry.0
+      session-commands: turknet.transformers.session.commands.0
+      session-commands-retry: turknet.transformers.session.commands.retry.0
+  elasticsearch:
+    url: http://elasticsearch:9200
+
+logging:
+  level:
+    root: INFO
+    com.github.melihemreguler.turknetmessagingservice: DEBUG
+
+springdoc:
+  swagger-ui:
+    enabled: true
+  api-docs:
+    enabled: true
+
+---
+spring:
+  config:
+    activate:
       on-profile: staging
   data:
     mongodb:
       uri: mongodb://admin:password@mongodb:27017/turknet-messaging-db?authSource=admin
-      database: turknet-messaging-db
   kafka:
     bootstrap-servers: kafka:9092
 
@@ -103,10 +151,8 @@ app:
       message-commands-retry: turknet.transformers.message.commands.retry.staging.0
       session-commands: turknet.transformers.session.commands.staging.0
       session-commands-retry: turknet.transformers.session.commands.retry.staging.0
-
-  session:
-    expiration-hours: 24
-    cleanup-interval-minutes: 60
+  elasticsearch:
+    url: http://elasticsearch:9200
 
 logging:
   level:
@@ -116,34 +162,8 @@ logging:
 springdoc:
   swagger-ui:
     enabled: true
-    path: /api/swagger-ui.html
   api-docs:
     enabled: true
-    path: /v3/api-docs
-
-management:
-  server:
-    port: 8080
-  endpoints:
-    web:
-      base-path: /actuator
-      exposure:
-        include: health,info,readiness,liveness
-  endpoint:
-    health:
-      show-details: always
-      show-components: always
-      probes:
-        enabled: true
-    readiness:
-      enabled: true
-    liveness:
-      enabled: true
-  health:
-    readinessstate:
-      enabled: true
-    livenessstate:
-      enabled: true
 
 ---
 spring:
@@ -153,7 +173,6 @@ spring:
   data:
     mongodb:
       uri: mongodb://admin:password@mongodb:27017/turknet-messaging-db?authSource=admin
-      database: turknet-messaging-db
   kafka:
     bootstrap-servers: prod-kafka-cluster:9092
 
@@ -166,10 +185,8 @@ app:
       message-commands-retry: turknet.transformers.message.commands.retry.prod.0
       session-commands: turknet.transformers.session.commands.prod.0
       session-commands-retry: turknet.transformers.session.commands.retry.prod.0
-
-  session:
-    expiration-hours: 24
-    cleanup-interval-minutes: 60
+  elasticsearch:
+    url: http://elasticsearch:9200
 
 logging:
   level:
@@ -179,31 +196,5 @@ logging:
 springdoc:
   swagger-ui:
     enabled: false
-    path: /api/swagger-ui.html
   api-docs:
     enabled: false
-    path: /v3/api-docs
-
-management:
-  server:
-    port: 8080
-  endpoints:
-    web:
-      base-path: /actuator
-      exposure:
-        include: health,readiness,liveness
-  endpoint:
-    health:
-      show-details: never
-      show-components: never
-      probes:
-        enabled: true
-    readiness:
-      enabled: true
-    liveness:
-      enabled: true
-  health:
-    readinessstate:
-      enabled: true
-    livenessstate:
-      enabled: true
