@@ -1,6 +1,6 @@
 package com.github.melihemreguler.turknetmessagingservice.controller;
 
-import com.github.melihemreguler.turknetmessagingservice.model.api.ReadinessResponse;
+import com.github.melihemreguler.turknetmessagingservice.model.response.ReadinessResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.admin.AdminClient;
