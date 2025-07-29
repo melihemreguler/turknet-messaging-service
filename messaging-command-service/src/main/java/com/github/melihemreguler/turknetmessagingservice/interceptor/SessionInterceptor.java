@@ -43,8 +43,8 @@ public class SessionInterceptor implements HandlerInterceptor {
             return true;
         }
         
-        String sessionId = request.getHeader(SessionConstants.SESSION_ID_HEADER.getValue());
-        String userId = request.getHeader(SessionConstants.USER_ID_HEADER.getValue());
+        String sessionId = request.getHeader(SessionConstants.SESSION_ID_HEADER);
+        String userId = request.getHeader(SessionConstants.USER_ID_HEADER);
         
         // Validate session ID
         if (!StringUtils.hasText(sessionId)) {
@@ -86,15 +86,15 @@ public class SessionInterceptor implements HandlerInterceptor {
      * Set user context in request attributes
      */
     private void setUserContext(HttpServletRequest request, SessionDto session) {
-        request.setAttribute(SessionConstants.USER_ID_ATTRIBUTE.getValue(), session.getUserId());
+        request.setAttribute(SessionConstants.USER_ID_ATTRIBUTE, session.getUserId());
     }
     
     /**
      * Set session and user ID in response headers for client use
      */
     private void setResponseHeaders(HttpServletResponse response, String sessionId, String userId) {
-        response.addHeader(SessionConstants.SESSION_ID_HEADER.getValue(), sessionId);
-        response.addHeader(SessionConstants.USER_ID_HEADER.getValue(), userId);
+        response.addHeader(SessionConstants.SESSION_ID_HEADER, sessionId);
+        response.addHeader(SessionConstants.USER_ID_HEADER, userId);
     }
     
     /**
