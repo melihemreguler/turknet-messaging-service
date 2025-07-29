@@ -11,6 +11,7 @@ import com.github.melihemreguler.messagingconsumer.model.UserCreationEvent;
 import com.github.melihemreguler.messagingconsumer.repository.ActivityLogRepository;
 import com.github.melihemreguler.messagingconsumer.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
@@ -20,19 +21,13 @@ import java.time.format.DateTimeFormatter;
 import java.util.Optional;
 
 @Service
+@RequiredArgsConstructor
 @Slf4j
 public class UserActivityConsumerService {
 
     private final ActivityLogRepository activityLogRepository;
     private final UserRepository userRepository;
     private final ObjectMapper objectMapper;
-
-    public UserActivityConsumerService(ActivityLogRepository activityLogRepository, UserRepository userRepository) {
-        this.activityLogRepository = activityLogRepository;
-        this.userRepository = userRepository;
-        this.objectMapper = new ObjectMapper();
-        this.objectMapper.registerModule(new JavaTimeModule());
-    }
 
     @KafkaListener(topics = "${app.kafka.topics.user-commands}", groupId = "${spring.kafka.consumer.group-id}")
     public void consumeUserActivity(String message) {
