@@ -1,5 +1,7 @@
 package com.github.melihemreguler.messagingconsumer.enums;
 
+import java.util.Optional;
+
 public enum SessionCommand {
     SAVE_SESSION("SAVE_SESSION"),
     UPSERT_SESSION("UPSERT_SESSION"),
@@ -29,5 +31,14 @@ public enum SessionCommand {
             }
         }
         throw new IllegalArgumentException("Unknown command: " + command);
+    }
+    
+    public static Optional<SessionCommand> fromStringOptional(String command) {
+        for (SessionCommand cmd : SessionCommand.values()) {
+            if (cmd.getCommand().equals(command)) {
+                return Optional.of(cmd);
+            }
+        }
+        return Optional.empty();
     }
 }

@@ -2,11 +2,11 @@ package com.github.melihemreguler.turknetmessagingservice.service;
 
 import com.github.melihemreguler.turknetmessagingservice.dto.UserDto;
 import com.github.melihemreguler.turknetmessagingservice.exception.ConflictException;
-import com.github.melihemreguler.turknetmessagingservice.model.api.UserRegisterRequest;
-import com.github.melihemreguler.turknetmessagingservice.model.api.LoginRequest;
+import com.github.melihemreguler.turknetmessagingservice.model.request.UserRegisterRequest;
+import com.github.melihemreguler.turknetmessagingservice.model.request.LoginRequest;
 import com.github.melihemreguler.turknetmessagingservice.model.event.UserActivityEvent;
-import com.github.melihemreguler.turknetmessagingservice.model.event.UserCreationEvent;
 import com.github.melihemreguler.turknetmessagingservice.repository.UserRepository;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -19,117 +19,84 @@ import java.util.Optional;
 @RequiredArgsConstructor
 @Slf4j
 public class UserService {
-    
+
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final KafkaProducerService kafkaProducerService;
     private final SessionService sessionService;
-    
+
     public UserDto registerUser(UserRegisterRequest request, String ipAddress, String userAgent) {
         // Check if user already exists
         if (userRepository.existsByUsername(request.username())) {
             throw new ConflictException("Username already exists");
         }
-        
+
         UserDto userDto = new UserDto();
         userDto.setUsername(request.username());
         userDto.setPasswordHash(passwordEncoder.encode(request.password()));
         userDto.setCreatedAt(LocalDateTime.now());
-        
+
         UserDto savedUser = userRepository.save(userDto);
-        
-        // Send user creation event to Kafka for activity logging
-        UserCreationEvent creationEvent = UserCreationEvent.create(
-            savedUser.getUsername(), 
-            savedUser.getId(),
-            request.email(),
-            ipAddress,
-            userAgent
+
+
+        UserActivityEvent activityEvent = UserActivityEvent.createUserCreation(
+                savedUser.getUsername(),
+                savedUser.getId(),
+                request.email(),
+                ipAddress,
+                userAgent
         );
-        kafkaProducerService.sendUserCommand(creationEvent, savedUser.getId());
-        
+        kafkaProducerService.sendUserCommand(activityEvent, savedUser.getId());
+
         log.info("User registered successfully: {}", savedUser.getUsername());
         return savedUser;
     }
-    
+
     public AuthenticationResult authenticateUser(LoginRequest request, String ipAddress, String userAgent) {
         String username = request.getTrimmedUsername();
-        
+
         Optional<UserDto> userOpt = userRepository.findByUsername(username);
-        
+
         AuthenticationResult result = validateUserCredentials(userOpt, request.password(), username);
-        
-        // Create session if authentication successful
+
         String sessionToken = null;
-        if (result.isSuccessful() && userOpt.isPresent()) {
+        if (result.successful() && userOpt.isPresent()) {
             UserDto user = userOpt.get();
             sessionToken = sessionService.createSession(user.getId(), username, ipAddress, userAgent);
         }
-        
-        // Send activity event to Kafka
+
         String userId = userOpt.map(UserDto::getId).orElse(null);
-        UserActivityEvent activityEvent = UserActivityEvent.create(
-            username, userId, ipAddress, userAgent, result.isSuccessful(), result.getFailureReason());
-        
+        UserActivityEvent activityEvent = UserActivityEvent.createLoginAttempt(
+                username, userId, ipAddress, userAgent, result.successful(), result.failureReason());
+
         kafkaProducerService.sendUserCommand(activityEvent, userId != null ? userId : "unknown");
-        
-        return new AuthenticationResult(result.isSuccessful(), result.getFailureReason(), sessionToken, userId);
+
+        return new AuthenticationResult(result.successful(), result.failureReason(), sessionToken, userId);
     }
-    
+
     private AuthenticationResult validateUserCredentials(Optional<UserDto> userOpt, String password, String username) {
         if (userOpt.isEmpty()) {
             String failureReason = "User not found";
             log.warn("Authentication failed for user {}: {}", username, failureReason);
             return new AuthenticationResult(false, failureReason, null, null);
         }
-        
+
         UserDto user = userOpt.get();
         if (!verifyPassword(password, user.getPasswordHash())) {
             String failureReason = "Invalid password";
             log.warn("Authentication failed for user {}: {}", username, failureReason);
             return new AuthenticationResult(false, failureReason, null, user.getId());
         }
-        
+
         log.info("User authenticated successfully: {}", username);
         return new AuthenticationResult(true, null, null, user.getId());
     }
-    
+
     private boolean verifyPassword(String rawPassword, String hashedPassword) {
         return passwordEncoder.matches(rawPassword, hashedPassword);
     }
-    
-    public Optional<UserDto> findByUsername(String username) {
-        return userRepository.findByUsername(username.trim().toLowerCase());
-    }
-    
-    // Inner class for authentication results
-    public static class AuthenticationResult {
-        private final boolean successful;
-        private final String failureReason;
-        private final String sessionId;
-        private final String userId;
-        
-        public AuthenticationResult(boolean successful, String failureReason, String sessionId, String userId) {
-            this.successful = successful;
-            this.failureReason = failureReason;
-            this.sessionId = sessionId;
-            this.userId = userId;
-        }
-        
-        public boolean isSuccessful() {
-            return successful;
-        }
-        
-        public String getFailureReason() {
-            return failureReason;
-        }
-        
-        public String getSessionId() {
-            return sessionId;
-        }
-        
-        public String getUserId() {
-            return userId;
-        }
+
+    public record AuthenticationResult(boolean successful, String failureReason, String sessionId, String userId) {
+
     }
 }

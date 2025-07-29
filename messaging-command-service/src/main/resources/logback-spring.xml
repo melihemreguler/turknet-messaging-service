@@ -24,12 +24,6 @@
         </encoder>
     </appender>
     
-    <!-- Elasticsearch appender -->
-    <appender name="ELASTICSEARCH" class="com.github.melihemreguler.turknetmessagingservice.logging.ElasticsearchAppender">
-        <elasticsearchUrl>http://elasticsearch:9200</elasticsearchUrl>
-        <indexName>turknet-messaging-logs</indexName>
-    </appender>
-    
     <!-- Async wrapper for Elasticsearch to avoid blocking -->
     <appender name="ASYNC_ELASTICSEARCH" class="ch.qos.logback.classic.AsyncAppender">
         <appender-ref ref="ELASTICSEARCH"/>
@@ -38,8 +32,13 @@
         <includeCallerData>false</includeCallerData>
     </appender>
     
-    <!-- Profile-specific configurations -->
+    <!-- Local profile configuration -->
     <springProfile name="local">
+        <appender name="ELASTICSEARCH" class="com.github.melihemreguler.turknetmessagingservice.logging.ElasticsearchAppender">
+            <elasticsearchUrl>http://localhost:9200</elasticsearchUrl>
+            <indexName>turknet-messaging-logs</indexName>
+        </appender>
+        
         <root level="INFO">
             <appender-ref ref="CONSOLE"/>
             <appender-ref ref="ASYNC_ELASTICSEARCH"/>
@@ -50,8 +49,32 @@
             <appender-ref ref="ASYNC_ELASTICSEARCH"/>
         </logger>
     </springProfile>
+
+    <!-- Docker profile configuration -->
+    <springProfile name="docker">
+        <appender name="ELASTICSEARCH" class="com.github.melihemreguler.turknetmessagingservice.logging.ElasticsearchAppender">
+            <elasticsearchUrl>http://elasticsearch:9200</elasticsearchUrl>
+            <indexName>turknet-messaging-logs</indexName>
+        </appender>
+        
+        <root level="INFO">
+            <appender-ref ref="CONSOLE"/>
+            <appender-ref ref="ASYNC_ELASTICSEARCH"/>
+        </root>
+
+        <logger name="com.github.melihemreguler.turknetmessagingservice" level="DEBUG" additivity="false">
+            <appender-ref ref="CONSOLE"/>
+            <appender-ref ref="ASYNC_ELASTICSEARCH"/>
+        </logger>
+    </springProfile>
     
+    <!-- Staging profile configuration -->
     <springProfile name="staging">
+        <appender name="ELASTICSEARCH" class="com.github.melihemreguler.turknetmessagingservice.logging.ElasticsearchAppender">
+            <elasticsearchUrl>http://elasticsearch:9200</elasticsearchUrl>
+            <indexName>turknet-messaging-logs</indexName>
+        </appender>
+        
         <root level="INFO">
             <appender-ref ref="CONSOLE"/>
             <appender-ref ref="ASYNC_ELASTICSEARCH"/>
@@ -63,7 +86,13 @@
         </logger>
     </springProfile>
     
+    <!-- Production profile configuration -->
     <springProfile name="prod">
+        <appender name="ELASTICSEARCH" class="com.github.melihemreguler.turknetmessagingservice.logging.ElasticsearchAppender">
+            <elasticsearchUrl>http://elasticsearch:9200</elasticsearchUrl>
+            <indexName>turknet-messaging-logs</indexName>
+        </appender>
+        
         <root level="WARN">
             <appender-ref ref="ASYNC_ELASTICSEARCH"/>
         </root>

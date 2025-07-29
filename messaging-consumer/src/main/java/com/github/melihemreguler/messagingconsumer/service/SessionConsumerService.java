@@ -1,32 +1,43 @@
 package com.github.melihemreguler.messagingconsumer.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.github.melihemreguler.messagingconsumer.config.KafkaRetryConfig;
+import com.github.melihemreguler.messagingconsumer.constants.KafkaConstants;
 import com.github.melihemreguler.messagingconsumer.model.SessionEvent;
-import com.github.melihemreguler.messagingconsumer.dto.SessionDto;
-import com.github.melihemreguler.messagingconsumer.repository.SessionRepository;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.github.melihemreguler.messagingconsumer.enums.SessionCommand;
+import com.github.melihemreguler.messagingconsumer.strategy.session.SessionCommandStrategy;
+import com.github.melihemreguler.messagingconsumer.strategy.session.SessionCommandStrategyFactory;
+import com.github.melihemreguler.messagingconsumer.exception.MaxRetryExceededException;
+import com.github.melihemreguler.messagingconsumer.exception.UnknownSessionCommandException;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.kafka.core.KafkaTemplate;
+import org.apache.kafka.clients.producer.ProducerRecord;
+import org.springframework.messaging.handler.annotation.Header;
+import java.util.Optional;
 import org.springframework.stereotype.Service;
 
 @Service
+@RequiredArgsConstructor
+@Slf4j
 public class SessionConsumerService {
     
-    private static final Logger log = LoggerFactory.getLogger(SessionConsumerService.class);
-    
-    private final SessionRepository sessionRepository;
     private final ObjectMapper objectMapper;
+    private final SessionCommandStrategyFactory strategyFactory;
+    private final KafkaTemplate<String, String> kafkaTemplate;
+    private final KafkaRetryConfig retryConfig;
     
-    public SessionConsumerService(SessionRepository sessionRepository) {
-        this.sessionRepository = sessionRepository;
-        this.objectMapper = new ObjectMapper();
-        this.objectMapper.registerModule(new JavaTimeModule());
-        log.info("SessionConsumerService initialized with repository: {}", sessionRepository.getClass().getSimpleName());
-    }
+    @Value("${app.kafka.topics.session-commands-retry}")
+    private String sessionCommandsRetryTopic;
     
     @KafkaListener(topics = "${app.kafka.topics.session-commands}", groupId = "${spring.kafka.consumer.group-id}")
-    public void handleSessionEvent(String message) {
+    public void handleSessionEvent(String message,
+                                  @Header(value = KafkaConstants.RETRY_COUNT_HEADER, defaultValue = "0") String retryCountHeader) {
+        
+        int retryCount = Integer.parseInt(retryCountHeader);
         
         try {
             log.info("Received session event message: {}", message);
@@ -36,131 +47,88 @@ public class SessionConsumerService {
             log.info("Parsed session event: {} for user: {}", 
                      sessionEvent.getCommand(), sessionEvent.getUserId());
             
-            switch (sessionEvent.getCommand()) {
-                case "SAVE_SESSION" -> handleSessionCreated(sessionEvent);
-                case "UPSERT_SESSION" -> handleSessionUpsert(sessionEvent);
-                case "UPDATE_SESSION" -> handleSessionUpdated(sessionEvent);
-                case "DELETE_SESSION" -> handleSessionDeleted(sessionEvent);
-                case "EXPIRE_SESSION" -> handleSessionExpired(sessionEvent);
-                default -> log.warn("Unknown session command: {}", sessionEvent.getCommand());
-            }
+            processSessionCommand(sessionEvent, message);
             
             log.debug("Successfully processed session event: {}", sessionEvent.getCommand());
             
+        } catch (JsonProcessingException e) {
+            log.error("Failed to parse session event JSON: {}", message, e);
+            handleRetry(message, retryCount, e);
+        } catch (UnknownSessionCommandException e) {
+            log.warn("Unknown session command in message: {}", message);
+            handleRetry(message, retryCount, e);
         } catch (Exception e) {
-            log.error("Error processing session event: {}", message, e);
-            throw new RuntimeException("Failed to process session event", e);
+            log.error("Unexpected error processing session event: {}", message, e);
+            handleRetry(message, retryCount, e);
         }
     }
     
-    private void handleSessionCreated(SessionEvent event) {
-        log.info("Creating session for user: {}", event.getUserId());
+    @KafkaListener(topics = "${app.kafka.topics.session-commands-retry}", groupId = "${spring.kafka.consumer.group-id}")
+    public void handleSessionEventRetry(String message,
+                                       @Header(value = KafkaConstants.RETRY_COUNT_HEADER, defaultValue = "0") String retryCountHeader) {
+        log.info("Received retry session event message: {} (retry: {})", message, retryCountHeader);
         
-        SessionDto session = new SessionDto(
-            event.getHashedSessionId(),
-            event.getUserId(),
-            event.getExpiresAt(),
-            event.getIpAddress(),
-            event.getUserAgent()
-        );
+        int retryCount = Integer.parseInt(retryCountHeader);
         
-        session.setCreatedAt(event.getTimestamp());
-        session.setLastAccessedAt(event.getTimestamp());
-        
-        sessionRepository.save(session);
-        log.info("Session created successfully for user: {}", event.getUserId());
+        try {
+            SessionEvent sessionEvent = objectMapper.readValue(message, SessionEvent.class);
+            
+            log.info("Parsed retry session event: {} for user: {}", 
+                     sessionEvent.getCommand(), sessionEvent.getUserId());
+            
+            processSessionCommand(sessionEvent, message);
+            
+            log.debug("Successfully processed retry session event: {}", sessionEvent.getCommand());
+            
+        } catch (JsonProcessingException e) {
+            log.error("Failed to parse retry session event JSON: {}", message, e);
+            handleRetry(message, retryCount, e);
+        } catch (UnknownSessionCommandException e) {
+            log.warn("Unknown session command in retry message: {}", message);
+            handleRetry(message, retryCount, e);
+        } catch (Exception e) {
+            log.error("Unexpected error processing retry session event: {}", message, e);
+            handleRetry(message, retryCount, e);
+        }
     }
     
-    private void handleSessionUpsert(SessionEvent event) {
-        log.info("Upserting session for user: {}", event.getUserId());
+    private void processSessionCommand(SessionEvent sessionEvent, String originalMessage) 
+            throws UnknownSessionCommandException {
         
-        // First, try to find existing session by userId
-        var existingSessions = sessionRepository.findByUserId(event.getUserId());
+        Optional<SessionCommand> commandOpt = SessionCommand.fromStringOptional(sessionEvent.getCommand());
         
-        if (!existingSessions.isEmpty()) {
-            // Update existing session
-            SessionDto existingSession = existingSessions.get(0); // Take the first one
-            existingSession.setHashedSessionId(event.getHashedSessionId());
-            existingSession.setExpiresAt(event.getExpiresAt());
-            existingSession.setIpAddress(event.getIpAddress());
-            existingSession.setUserAgent(event.getUserAgent());
-            existingSession.updateLastAccessed();
-            
-            sessionRepository.save(existingSession);
-            
-            // Delete any additional sessions for this user (keep only one)
-            if (existingSessions.size() > 1) {
-                for (int i = 1; i < existingSessions.size(); i++) {
-                    sessionRepository.delete(existingSessions.get(i));
-                }
-                log.info("Removed {} duplicate sessions for user: {}", existingSessions.size() - 1, event.getUserId());
-            }
-            
-            log.info("Session updated successfully for user: {}", event.getUserId());
+        if (commandOpt.isEmpty()) {
+            throw new UnknownSessionCommandException(sessionEvent.getCommand(), originalMessage);
+        }
+        
+        SessionCommand command = commandOpt.get();
+        SessionCommandStrategy strategy = strategyFactory.getStrategy(command);
+        
+        if (strategy != null) {
+            strategy.execute(sessionEvent);
         } else {
-            // Create new session
-            SessionDto session = new SessionDto(
-                event.getHashedSessionId(),
-                event.getUserId(),
-                event.getExpiresAt(),
-                event.getIpAddress(),
-                event.getUserAgent()
-            );
-            
-            session.setCreatedAt(event.getTimestamp());
-            session.setLastAccessedAt(event.getTimestamp());
-            
-            sessionRepository.save(session);
-            log.info("New session created successfully for user: {}", event.getUserId());
+            log.error("No strategy found for command: {}", command);
         }
     }
     
-    private void handleSessionUpdated(SessionEvent event) {
-        log.info("Updating last access time for session of user: {}", event.getUserId());
-        
-        // Find session by userId (since we maintain one session per user)
-        var existingSessions = sessionRepository.findByUserId(event.getUserId());
-        
-        if (!existingSessions.isEmpty()) {
-            SessionDto session = existingSessions.get(0);
-            session.updateLastAccessed();
-            // Optionally update IP and User-Agent if provided
-            if (event.getIpAddress() != null) {
-                session.setIpAddress(event.getIpAddress());
-            }
-            if (event.getUserAgent() != null) {
-                session.setUserAgent(event.getUserAgent());
-            }
-            sessionRepository.save(session);
-            log.info("Session last access updated for user: {}", event.getUserId());
+    private void handleRetry(String message, int retryCount, Exception error) {
+        if (retryCount < retryConfig.getMaxRetry()) {
+            int newRetryCount = retryCount + 1;
+            log.warn("Retrying session processing (attempt {}/{})", newRetryCount, retryConfig.getMaxRetry());
+            
+            ProducerRecord<String, String> retryRecord = new ProducerRecord<>(
+                sessionCommandsRetryTopic, message);
+            retryRecord.headers().add(KafkaConstants.RETRY_COUNT_HEADER, 
+                String.valueOf(newRetryCount).getBytes());
+                
+            kafkaTemplate.send(retryRecord)
+                .thenAccept(result -> log.debug("Session message sent to retry topic successfully"))
+                .exceptionally(throwable -> {
+                    log.error("Failed to send session message to retry topic: {}", throwable.getMessage());
+                    return null;
+                });
         } else {
-            log.warn("No session found to update for user: {}", event.getUserId());
+            throw new MaxRetryExceededException(message, retryConfig.getMaxRetry(), error);
         }
-    }
-    
-    private void handleSessionDeleted(SessionEvent event) {
-        log.info("Deleting session for user: {}", event.getUserId());
-        
-        sessionRepository.findByHashedSessionId(event.getHashedSessionId())
-            .ifPresentOrElse(
-                session -> {
-                    sessionRepository.delete(session);
-                    log.info("Session deleted successfully for user: {}", event.getUserId());
-                },
-                () -> log.warn("Session not found for deletion: {}", event.getHashedSessionId())
-            );
-    }
-    
-    private void handleSessionExpired(SessionEvent event) {
-        log.info("Handling expired session for user: {}", event.getUserId());
-        
-        sessionRepository.findByHashedSessionId(event.getHashedSessionId())
-            .ifPresentOrElse(
-                session -> {
-                    sessionRepository.delete(session);
-                    log.info("Expired session deleted for user: {}", event.getUserId());
-                },
-                () -> log.warn("Session not found for expiration: {}", event.getHashedSessionId())
-            );
     }
 }

@@ -1,41 +1,46 @@
 package com.github.melihemreguler.turknetmessagingservice.enums;
 
-import lombok.Getter;
-
 /**
  * Constants for session and user management in HTTP requests/responses
  */
-@Getter
-public enum SessionConstants {
+public final class SessionConstants {
     
     /**
      * HTTP header name for session ID
      */
-    SESSION_ID_HEADER("X-Session-Id"),
+    public static final String SESSION_ID_HEADER = "X-Session-Id";
     
     /**
      * HTTP header name for user ID
      */
-    USER_ID_HEADER("X-User-Id"),
+    public static final String USER_ID_HEADER = "X-User-Id";
     
     /**
      * Request attribute name for current user ID
      */
-    USER_ID_ATTRIBUTE("currentUserId"),
+    public static final String USER_ID_ATTRIBUTE = "currentUserId";
     
     /**
      * Request attribute name for current username (if needed)
      */
-    USERNAME_ATTRIBUTE("currentUser");
+    public static final String USERNAME_ATTRIBUTE = "currentUser";
     
-    private final String value;
+    /**
+     * HTTP header name for X-Forwarded-For
+     */
+    public static final String X_FORWARDED_FOR_HEADER = "X-Forwarded-For";
     
-    SessionConstants(String value) {
-        this.value = value;
-    }
-
-    @Override
-    public String toString() {
-        return value;
+    /**
+     * HTTP header name for X-Real-IP
+     */
+    public static final String X_REAL_IP_HEADER = "X-Real-IP";
+    
+    /**
+     * HTTP header name for User-Agent
+     */
+    public static final String USER_AGENT_HEADER = "User-Agent";
+    
+    private SessionConstants() {
+        throw new UnsupportedOperationException("This is a utility class and cannot be instantiated");
     }
 }

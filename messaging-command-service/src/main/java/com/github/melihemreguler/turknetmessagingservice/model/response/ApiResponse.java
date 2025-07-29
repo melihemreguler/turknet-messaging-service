@@ -1,4 +1,4 @@
-package com.github.melihemreguler.turknetmessagingservice.model.api;
+package com.github.melihemreguler.turknetmessagingservice.model.response;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

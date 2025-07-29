@@ -1,8 +1,19 @@
 package com.github.melihemreguler.turknetmessagingservice.exception;
 
-public class ThreadNotFoundException extends RuntimeException {
+public class ThreadNotFoundException extends BaseTurknetMessagingException {
+    
     public ThreadNotFoundException(String message) {
         super(message);
+    }
+    
+    @Override
+    protected String getDefaultErrorCode() {
+        return "THREAD_NOT_FOUND";
+    }
+    
+    @Override
+    public String getExceptionType() {
+        return "ThreadNotFoundException";
     }
     
     public static ThreadNotFoundException forUsers(String userId1, String userId2) {

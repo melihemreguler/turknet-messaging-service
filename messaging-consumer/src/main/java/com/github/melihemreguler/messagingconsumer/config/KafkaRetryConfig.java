@@ -10,6 +10,9 @@ import org.springframework.context.annotation.Configuration;
 @Getter
 @Setter
 public class KafkaRetryConfig {
-    private int maxRetry = 5;
-    private String cron = "*/10 * * * *";
+
+    private int maxRetry;
+    
+
+    private String cron;
 }

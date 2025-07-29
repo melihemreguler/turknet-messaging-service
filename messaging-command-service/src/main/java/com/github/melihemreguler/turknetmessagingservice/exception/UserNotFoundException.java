@@ -1,12 +1,23 @@
 package com.github.melihemreguler.turknetmessagingservice.exception;
 
-public class UserNotFoundException extends RuntimeException {
+public class UserNotFoundException extends BaseTurknetMessagingException {
+    
     public UserNotFoundException(String message) {
         super(message);
     }
     
     public UserNotFoundException(String message, Throwable cause) {
         super(message, cause);
+    }
+    
+    @Override
+    protected String getDefaultErrorCode() {
+        return "USER_NOT_FOUND";
+    }
+    
+    @Override
+    public String getExceptionType() {
+        return "UserNotFoundException";
     }
     
     public static UserNotFoundException forUserId(String userId) {
