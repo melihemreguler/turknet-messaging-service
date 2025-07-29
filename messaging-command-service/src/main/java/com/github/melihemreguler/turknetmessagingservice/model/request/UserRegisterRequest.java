@@ -1,4 +1,4 @@
-package com.github.melihemreguler.turknetmessagingservice.model.api;
+package com.github.melihemreguler.turknetmessagingservice.model.request;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
