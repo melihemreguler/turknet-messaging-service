@@ -5,25 +5,18 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.github.melihemreguler.messagingconsumer.model.SessionEvent;
 import com.github.melihemreguler.messagingconsumer.dto.SessionDto;
 import com.github.melihemreguler.messagingconsumer.repository.SessionRepository;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 
 @Service
+@RequiredArgsConstructor
+@Slf4j
 public class SessionConsumerService {
-    
-    private static final Logger log = LoggerFactory.getLogger(SessionConsumerService.class);
     
     private final SessionRepository sessionRepository;
     private final ObjectMapper objectMapper;
-    
-    public SessionConsumerService(SessionRepository sessionRepository) {
-        this.sessionRepository = sessionRepository;
-        this.objectMapper = new ObjectMapper();
-        this.objectMapper.registerModule(new JavaTimeModule());
-        log.info("SessionConsumerService initialized with repository: {}", sessionRepository.getClass().getSimpleName());
-    }
     
     @KafkaListener(topics = "${app.kafka.topics.session-commands}", groupId = "${spring.kafka.consumer.group-id}")
     public void handleSessionEvent(String message) {
