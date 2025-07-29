@@ -4,27 +4,19 @@ import com.github.melihemreguler.turknetmessagingservice.config.MessagingConfig;
 import com.github.melihemreguler.turknetmessagingservice.exception.MessageSerializationException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
 @Service
+@RequiredArgsConstructor
 @Slf4j
 public class KafkaProducerService {
     
     private final KafkaTemplate<String, String> kafkaTemplate;
     private final MessagingConfig messagingConfig;
     private final ObjectMapper objectMapper;
-    
-    // Constructor to configure ObjectMapper
-    public KafkaProducerService(KafkaTemplate<String, String> kafkaTemplate, 
-                               MessagingConfig messagingConfig) {
-        this.kafkaTemplate = kafkaTemplate;
-        this.messagingConfig = messagingConfig;
-        this.objectMapper = new ObjectMapper();
-        this.objectMapper.registerModule(new JavaTimeModule());
-    }
     
     public void sendMessageCommand(Object messageCommand, String userId) {
         try {
