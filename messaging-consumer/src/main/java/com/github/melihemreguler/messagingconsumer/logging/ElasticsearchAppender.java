@@ -2,7 +2,6 @@ package com.github.melihemreguler.messagingconsumer.logging;
 
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.AppenderBase;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
@@ -14,11 +13,10 @@ public class ElasticsearchAppender extends AppenderBase<ILoggingEvent> {
     
     private static final Logger LOGGER = Logger.getLogger(ElasticsearchAppender.class.getName());
     
-    private String elasticsearchUrl = "http://elasticsearch:9200";
-    private String indexName = "turknet-messaging-logs";
+    private String elasticsearchUrl;
+    private String indexName;
     private WebClient webClient;
-    private ObjectMapper objectMapper = new ObjectMapper();
-    
+
     @Override
     public void start() {
         super.start();
