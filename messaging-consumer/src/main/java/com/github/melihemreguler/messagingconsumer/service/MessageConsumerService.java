@@ -24,7 +24,7 @@ public class MessageConsumerService {
     private final KafkaTemplate<String, String> kafkaTemplate;
     private final KafkaRetryConfig retryConfig;
     private final MessagingConfig messagingConfig;
-    private final ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
+    private final ObjectMapper objectMapper;
 
     @KafkaListener(topics = "${app.kafka.topics.message-commands}", groupId = "${spring.kafka.consumer.group-id}")
     public void consumeMessageCommand(String message, 
