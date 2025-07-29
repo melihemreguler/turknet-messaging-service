@@ -2,12 +2,11 @@ package com.github.melihemreguler.turknetmessagingservice.controller;
 
 import com.github.melihemreguler.turknetmessagingservice.dto.ActivityLogDto;
 import com.github.melihemreguler.turknetmessagingservice.enums.SessionConstants;
-import com.github.melihemreguler.turknetmessagingservice.model.api.ActivityLogsRequest;
-import com.github.melihemreguler.turknetmessagingservice.model.api.ApiResponse;
-import com.github.melihemreguler.turknetmessagingservice.model.api.PaginatedResponse;
+import com.github.melihemreguler.turknetmessagingservice.model.request.ActivityLogsRequest;
+import com.github.melihemreguler.turknetmessagingservice.model.response.ApiResponse;
+import com.github.melihemreguler.turknetmessagingservice.model.response.PaginatedResponse;
 import com.github.melihemreguler.turknetmessagingservice.service.ActivityService;
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
