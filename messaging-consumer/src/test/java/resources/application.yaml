@@ -5,6 +5,7 @@ spring:
     active: test
   data:
     mongodb:
+      uri: mongodb://admin:password@localhost:27017/turknet-messaging-db?authSource=admin
       database: turknet-messaging-db
   mvc:
     throw-exception-if-no-handler-found: true
@@ -12,18 +13,28 @@ spring:
     resources:
       add-mappings: false
   kafka:
+    bootstrap-servers: localhost:29092
     consumer:
       auto-offset-reset: earliest
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      group-id: messaging-consumer-group
 
 app:
   kafka:
     retry:
       max-retry: 5
       cron: "*/10 * * * *"
+    topics:
+      message-commands: turknet.transformers.message.commands.0
+      message-commands-retry: turknet.transformers.message.commands.retry.0
+      user-commands: turknet.transformers.user.commands.0
+      user-commands-retry: turknet.transformers.user.commands.retry.0
+      session-commands: turknet.transformers.session.commands.0
+      session-commands-retry: turknet.transformers.session.commands.retry.0
   elasticsearch:
     index-name: turknet-messaging-logs
+    url: http://localhost:9200
 
 server:
   port: 8081
@@ -42,31 +53,6 @@ springdoc:
     path: /api/swagger-ui.html
   api-docs:
     path: /v3/api-docs
-
----
-spring:
-  config:
-    activate:
-      on-profile: test
-  data:
-    mongodb:
-      uri: mongodb://admin:password@localhost:27017/turknet-messaging-db?authSource=admin
-  kafka:
-    bootstrap-servers: localhost:29092
-    consumer:
-      group-id: messaging-consumer-group
-
-app:
-  kafka:
-    topics:
-      message-commands: turknet.transformers.message.commands.0
-      message-commands-retry: turknet.transformers.message.commands.retry.0
-      user-commands: turknet.transformers.user.commands.0
-      user-commands-retry: turknet.transformers.user.commands.retry.0
-      session-commands: turknet.transformers.session.commands.0
-      session-commands-retry: turknet.transformers.session.commands.retry.0
-  elasticsearch:
-    url: http://localhost:9200
 
 logging:
   level:
