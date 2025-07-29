@@ -1,6 +1,5 @@
 package com.github.melihemreguler.turknetmessagingservice.controller;
 
-import com.github.melihemreguler.turknetmessagingservice.model.api.HealthResponse;
 import com.github.melihemreguler.turknetmessagingservice.model.api.ReadinessResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -24,15 +23,15 @@ public class HealthController {
     private final KafkaAdmin kafkaAdmin;
 
     @GetMapping("/health")
-    public ResponseEntity<HealthResponse> health() {
-        return ResponseEntity.ok(HealthResponse.up("turknet-messaging-service"));
+    public ResponseEntity<String> health() {
+        return ResponseEntity.ok("UP");
     }
     
     
     @GetMapping("/ready")
     public ResponseEntity<ReadinessResponse> readiness() {
         ReadinessResponse.KafkaHealthStatus kafkaStatus = checkKafkaHealth();
-        ReadinessResponse response = ReadinessResponse.create("turknet-messaging-service", kafkaStatus);
+        ReadinessResponse response = ReadinessResponse.create("messaging-command-service", kafkaStatus);
         
         boolean isHealthy = "UP".equals(response.status());
         return isHealthy ? ResponseEntity.ok(response) : ResponseEntity.status(503).body(response);
