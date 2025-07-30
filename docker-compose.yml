@@ -147,6 +147,34 @@ services:
       - SPRING_PROFILES_ACTIVE=docker
     restart: unless-stopped
 
+  graphql-middleware:
+    build:
+      context: ./graphql-middleware
+      dockerfile: Dockerfile
+    depends_on:
+      - messaging-command-service
+    ports:
+      - "4000:4000"
+    environment:
+      - NODE_ENV=production
+      - PORT=4000
+      - REST_API_BASE_URL=http://messaging-command-service:8080
+      - REST_API_TIMEOUT=30000
+      - LOG_LEVEL=info
+      - LOG_FORMAT=json
+      - CORS_ORIGIN=*
+      - CORS_CREDENTIALS=true
+      - GRAPHQL_PLAYGROUND=true
+      - GRAPHQL_INTROSPECTION=true
+      - GRAPHQL_DEBUG=false
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:4000/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) }).on('error', () => { process.exit(1) })"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
 volumes:
   mongodb-data:
     driver: local
