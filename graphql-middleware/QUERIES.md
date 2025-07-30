@@ -2,6 +2,287 @@
 
 This file contains comprehensive API examples for Turknet Messaging GraphQL Middleware.
 
+## Browser & GUI Usage
+
+### GraphQL Playground (Recommended)
+
+1. **Start the GraphQL middleware:**
+   ```bash
+   node src/index.js
+   ```
+
+2. **Open GraphQL Playground in browser:**
+   ```
+   http://localhost:4000/graphql
+   ```
+
+3. **Using Headers in Playground:**
+   - Click on "HTTP HEADERS" tab at bottom
+   - Add authentication headers:
+   ```json
+   {
+     "X-Session-Id": "your-session-id-here",
+     "X-User-Id": "your-user-id-here"
+   }
+   ```
+
+4. **Example Query in Playground:**
+   ```graphql
+   query {
+     health {
+       status
+       timestamp
+     }
+   }
+   ```
+
+### Apollo Studio
+- Visit `http://localhost:4000/graphql` in browser
+- Click "Query your server" button
+- You'll be redirected to Apollo Studio with a beautiful interface
+
+**Apollo Studio Tips:**
+1. **Auto-completion:** Use Ctrl+Space for suggestions
+2. **Documentation:** Click field names to see descriptions
+3. **Variable Templates:** Use these ready-to-copy templates:
+
+
+**Health Check Template:**
+```graphql
+query HealthCheck {
+  health {
+    status
+    timestamp
+    details
+  }
+}
+```
+
+**Readiness Check Template:**
+```graphql
+query ReadinessCheck {
+  readiness {
+    status
+    timestamp
+    details
+  }
+}
+```
+
+**Register User Template:**
+```graphql
+mutation Register($input: RegisterInput!, $clientInfo: ClientInfoInput) {
+  register(input: $input, clientInfo: $clientInfo) {
+    success
+    message
+    sessionId
+    userId
+    data {
+      id
+      username
+      email
+      createdAt
+    }
+  }
+}
+```
+Variables:
+```json
+{
+  "input": {
+    "username": "apollotest",
+    "email": "apollotest@example.com",
+    "password": "testPassword123"
+  },
+  "clientInfo": {
+    "ipAddress": "127.0.0.1",
+    "userAgent": "Apollo Studio"
+  }
+}
+```
+
+**Login User Template:**
+```graphql
+mutation Login($input: LoginInput!, $clientInfo: ClientInfoInput) {
+  login(input: $input, clientInfo: $clientInfo) {
+    success
+    message
+    sessionId
+    userId
+  }
+}
+```
+Variables:
+```json
+{
+  "input": {
+    "username": "apollotest",
+    "password": "testPassword123"
+  },
+  "clientInfo": {
+    "ipAddress": "127.0.0.1",
+    "userAgent": "Apollo Studio"
+  }
+}
+```
+
+**Send Message Template:**
+```graphql
+mutation SendMessage($input: SendMessageInput!) {
+  sendMessage(input: $input) {
+    success
+    message
+    data {
+      threadId
+      sender
+      content
+      timestamp
+    }
+  }
+}
+```
+Variables:
+```json
+{
+  "input": {
+    "receiverUsername": "testuser10",
+    "content": "Hello from Apollo Studio!"
+  }
+}
+```
+Headers:
+```json
+{
+  "X-Session-Id": "your-session-id-here",
+  "X-User-Id": "your-user-id-here"
+}
+```
+
+**Get Message History Template:**
+```graphql
+query GetMessageHistory($username: String!, $pagination: PaginationInput) {
+  getMessageHistory(username: $username, pagination: $pagination) {
+    success
+    message
+    data {
+      data {
+        id
+        threadId
+        senderId
+        senderUsername
+        content
+        timestamp
+      }
+      total
+      limit
+      offset
+    }
+  }
+}
+```
+Variables:
+```json
+{
+  "username": "testuser2",
+  "pagination": {
+    "page": 0,
+    "size": 5
+  }
+}
+```
+Headers:
+```json
+{
+  "X-Session-Id": "your-session-id-here",
+  "X-User-Id": "your-user-id-here"
+}
+```
+
+**Get Activity Logs Template:**
+```graphql
+query GetMyActivities($pagination: PaginationInput) {
+  getMyActivityLogs(pagination: $pagination) {
+    success
+    message
+    data {
+      totalElements
+      totalPages
+      currentPage
+      activities {
+        id
+        activityType
+        description
+        timestamp
+        ipAddress
+        userAgent
+        metadata
+      }
+    }
+  }
+}
+```
+Variables:
+```json
+{
+  "pagination": {
+    "page": 0,
+    "size": 10
+  }
+}
+```
+Headers:
+```json
+{
+  "X-Session-Id": "your-session-id-here",
+  "X-User-Id": "your-user-id-here"
+}
+```
+
+**Logout Template:**
+```graphql
+mutation Logout {
+  logout {
+    success
+    message
+    data
+  }
+}
+```
+Headers:
+```json
+{
+  "X-Session-Id": "your-session-id-here",
+  "X-User-Id": "your-user-id-here"
+}
+```
+
+### Postman Usage
+
+1. **Create new POST request:**
+   - URL: `http://localhost:4000/graphql`
+   - Method: `POST`
+   - Headers: `Content-Type: application/json`
+
+2. **Add authentication headers (if needed):**
+   - `X-Session-Id: your-session-id`
+   - `X-User-Id: your-user-id`
+
+3. **Body (raw JSON):**
+   ```json
+   {
+     "query": "query { health { status timestamp } }"
+   }
+   ```
+
+### VS Code Extensions
+- **GraphQL**: by GraphQL Foundation
+- **Apollo GraphQL**: by Apollo GraphQL
+
+### Other GUI Tools
+- **Insomnia**: Great GraphQL support with schema introspection
+- **Altair GraphQL Client**: Lightweight desktop app
+- **GraphiQL**: Classic GraphQL IDE
+
 ##  Getting Started
 
 ### Starting GraphQL Middleware
@@ -11,7 +292,7 @@ This file contains comprehensive API examples for Turknet Messaging GraphQL Midd
 node index.js
 ```
 
-## 🔍 Health Check Endpoints
+## Health Check Endpoints
 
 ### 1. REST Health Check
 
