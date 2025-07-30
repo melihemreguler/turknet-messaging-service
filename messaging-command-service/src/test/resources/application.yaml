@@ -1,0 +1,85 @@
+server:
+  port: 8080
+  error:
+    include-stacktrace: never
+    include-exception: false
+    include-message: never
+    include-binding-errors: never
+
+spring:
+  application:
+    name: turknet-messaging-service
+  profiles:
+    active: test
+  data:
+    mongodb:
+      uri: mongodb://admin:password@localhost:27017/turknet-messaging-db?authSource=admin
+      database: turknet-messaging-db
+  web:
+    resources:
+      add-mappings: false
+  kafka:
+    bootstrap-servers: localhost:29092
+    consumer:
+      group-id: turknet-messaging-group
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+      acks: all
+      retries: 3
+
+app:
+  session:
+    expiration-hours: 24
+    cleanup-interval-minutes: 60
+  kafka:
+    topics:
+      user-commands: turknet.transformers.user.commands.0
+      user-commands-retry: turknet.transformers.user.commands.retry.0
+      message-commands: turknet.transformers.message.commands.0
+      message-commands-retry: turknet.transformers.message.commands.retry.0
+      session-commands: turknet.transformers.session.commands.0
+      session-commands-retry: turknet.transformers.session.commands.retry.0
+  elasticsearch:
+    index-name: turknet-messaging-logs
+    url: http://localhost:9200
+
+springdoc:
+  swagger-ui:
+    path: /api/swagger-ui.html
+    enabled: true
+  api-docs:
+    path: /v3/api-docs
+    enabled: true
+
+management:
+  server:
+    port: 8080
+  endpoints:
+    web:
+      base-path: /actuator
+      exposure:
+        include: health,info,readiness,liveness
+  endpoint:
+    health:
+      show-details: always
+      show-components: always
+      probes:
+        enabled: true
+    readiness:
+      enabled: true
+    liveness:
+      enabled: true
+  health:
+    readinessstate:
+      enabled: true
+    livenessstate:
+      enabled: true
+
+logging:
+  level:
+    root: INFO
+    com.github.melihemreguler.turknetmessagingservice: DEBUG
