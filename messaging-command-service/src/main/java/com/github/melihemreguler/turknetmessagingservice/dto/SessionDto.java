@@ -21,6 +21,7 @@ public class SessionDto {
     @Indexed(unique = true)
     private String hashedSessionId;
 
+    @Indexed
     private String userId;
 
     private LocalDateTime createdAt;
