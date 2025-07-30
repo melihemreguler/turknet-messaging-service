@@ -22,6 +22,8 @@ class GraphQLServer {
       this.server = new ApolloServer({
         typeDefs,
         resolvers,
+        introspection: true,
+        playground: process.env.NODE_ENV !== 'production',
         context: ({ req }) => {
           // Extract session and user information from headers
           const sessionId = req.headers['x-session-id'];
