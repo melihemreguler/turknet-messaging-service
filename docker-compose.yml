@@ -107,18 +107,50 @@ services:
     depends_on:
       - elasticsearch
 
-  elasticsearch-setup:
-    build:
-      context: .
-      dockerfile_inline: |
-        FROM alpine:latest
-        RUN apk add --no-cache curl bash
-        COPY scripts/elasticsearch-setup.sh /setup.sh
-        RUN chmod +x /setup.sh
-        CMD ["/setup.sh"]
+  kibana-setup:
+    image: alpine/curl:latest
+    container_name: kibana-setup
     depends_on:
-      - elasticsearch
       - kibana
+      - elasticsearch
+    command: 
+      - sh
+      - -c
+      - |
+        echo 'Waiting for Kibana to be ready...'
+        until curl -s http://kibana:5601/api/status | grep -q '"overall":{"level":"available"'; do
+          echo 'Kibana is not ready yet, waiting...'
+          sleep 5
+        done
+        echo 'Kibana is ready, creating index patterns...'
+        
+        echo 'Creating turknet-messaging-logs index pattern...'
+        curl -X POST \
+          "http://kibana:5601/api/saved_objects/index-pattern/turknet-messaging-logs" \
+          --header "kbn-xsrf: true" \
+          --header "Content-Type: application/json" \
+          --data \
+          '{
+            "attributes": {
+              "title": "turknet-messaging-logs*",
+              "timeFieldName": "@timestamp"
+            }
+          }'
+        
+        echo 'Creating turknet-messaging-graphql-logs index pattern...'
+        curl -X POST \
+          "http://kibana:5601/api/saved_objects/index-pattern/turknet-messaging-graphql-logs" \
+          --header "kbn-xsrf: true" \
+          --header "Content-Type: application/json" \
+          --data \
+          '{
+            "attributes": {
+              "title": "turknet-messaging-graphql-logs*",
+              "timeFieldName": "@timestamp"
+            }
+          }'
+        
+        echo 'Index patterns created successfully!'
     restart: "no"
 
   messaging-command-service:
@@ -146,6 +178,37 @@ services:
     environment:
       - SPRING_PROFILES_ACTIVE=docker
     restart: unless-stopped
+
+  graphql-middleware:
+    build:
+      context: ./graphql-middleware
+      dockerfile: Dockerfile
+    depends_on:
+      - messaging-command-service
+      - elasticsearch
+    ports:
+      - "4000:4000"
+    environment:
+      - NODE_ENV=production
+      - PORT=4000
+      - REST_API_BASE_URL=http://messaging-command-service:8080
+      - REST_API_TIMEOUT=30000
+      - LOG_LEVEL=info
+      - LOG_FORMAT=json
+      - CORS_ORIGIN=*
+      - CORS_CREDENTIALS=true
+      - GRAPHQL_PLAYGROUND=true
+      - GRAPHQL_INTROSPECTION=true
+      - GRAPHQL_DEBUG=false
+      - ELASTICSEARCH_ENABLED=true
+      - ELASTICSEARCH_URL=http://elasticsearch:9200
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:4000/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) }).on('error', () => { process.exit(1) })"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
 
 volumes:
   mongodb-data:
