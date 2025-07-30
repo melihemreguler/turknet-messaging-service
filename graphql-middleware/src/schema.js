@@ -91,25 +91,46 @@ const typeDefs = gql`
   }
 
   # Input types
+  "User registration input data"
   input RegisterInput {
+    "Username for the new user"
     username: String!
+    "Email address for the new user"
     email: String!
+    "Password for the new user"
     password: String!
   }
 
+  "User login input data"
   input LoginInput {
+    "Username or email for login"
     username: String!
+    "User password"
     password: String!
   }
 
+  "Message sending input data"
   input SendMessageInput {
+    "Username of the message recipient"
     receiverUsername: String!
+    "Message content to send"
     content: String!
   }
 
+  "Pagination parameters"
   input PaginationInput {
+    "Page number (0-based)"
     page: Int = 0
+    "Number of items per page"
     size: Int = 20
+  }
+
+  "Client information for tracking"
+  input ClientInfoInput {
+    "Client IP address"
+    ipAddress: String
+    "User agent string"
+    userAgent: String
   }
 
   # Root types
