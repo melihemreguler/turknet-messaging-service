@@ -8,10 +8,11 @@ public record SessionEvent(
     String command,
     String hashedSessionId,
     String userId,
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
     LocalDateTime expiresAt,
     String ipAddress,
     String userAgent,
-    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSSSS")
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
     LocalDateTime timestamp
 ) {
     public static SessionEvent create(
