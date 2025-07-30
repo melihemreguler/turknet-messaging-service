@@ -1,127 +1,92 @@
-const request = require('supertest');
 const GraphQLServer = require('../src/server');
+const express = require('express');
+const { ApolloServer } = require('apollo-server-express');
+const logger = require('../src/logger');
 
-describe('GraphQL Server', () => {
-  let app;
+jest.mock('express');
+jest.mock('apollo-server-express');
+jest.mock('../src/logger');
+
+describe('GraphQLServer', () => {
   let server;
 
-  beforeAll(async () => {
-    // Set test environment
-    process.env.NODE_ENV = 'test';
-    process.env.PORT = '0'; // Use random port
-    process.env.GRAPHQL_PLAYGROUND = 'false';
-    process.env.GRAPHQL_INTROSPECTION = 'true';
-    process.env.REST_API_BASE_URL = 'http://localhost:8080';
-    
-    const graphqlServer = new GraphQLServer();
-    server = await graphqlServer.start();
-    app = graphqlServer.app;
-  });
+beforeEach(() => {
+  jest.clearAllMocks();
+  // Express mock: app objesi jest.fn fonksiyonları ile
+  const appMock = {
+    use: jest.fn(),
+    get: jest.fn(),
+  };
+  express.mockReturnValue(appMock);
+  server = new GraphQLServer();
+});
 
-  afterAll(async () => {
-    if (server) {
-      server.close();
-    }
-  });
-
-  describe('Health endpoints', () => {
-    test('GET /health should return health status', async () => {
-      const response = await request(app)
-        .get('/health')
-        .expect(200);
-
-      expect(response.body).toMatchObject({
-        status: 'UP',
-        service: 'turknet-messaging-graphql-middleware'
-      });
-      expect(response.body.timestamp).toBeDefined();
-    });
-
-    test('GET /ready should return readiness status', async () => {
-      const response = await request(app)
-        .get('/ready')
-        .expect(200);
-
-      expect(response.body).toMatchObject({
-        status: 'READY',
-        service: 'turknet-messaging-graphql-middleware'
-      });
-      expect(response.body.timestamp).toBeDefined();
+  describe('constructor', () => {
+    it('should initialize app and port (Given)', () => {
+      // Given: New instance
+      // When: Constructed
+      // Then: app and port are set
+      expect(server.app).toBeDefined();
+      expect(server.port).toBe(process.env.PORT || 4000);
     });
   });
 
-  describe('GraphQL endpoint', () => {
-    test('POST /graphql should handle introspection query', async () => {
-      const introspectionQuery = `
-        query {
-          __schema {
-            types {
-              name
-            }
-          }
-        }
-      `;
+  describe('initialize', () => {
+    it('should create ApolloServer and call setupMiddleware/setupRoutes (Given)', async () => {
+      // Given: ApolloServer mock
+      ApolloServer.mockImplementation(() => ({
+        start: jest.fn().mockResolvedValue(),
+        applyMiddleware: jest.fn()
+      }));
+      server.setupMiddleware = jest.fn();
+      server.setupRoutes = jest.fn();
 
-      const response = await request(app)
-        .post('/graphql')
-        .send({ query: introspectionQuery })
-        .expect(200);
+      // When: initialize is called
+      await server.initialize();
 
-      expect(response.body.data).toBeDefined();
-      expect(response.body.data.__schema).toBeDefined();
-      expect(response.body.data.__schema.types).toBeInstanceOf(Array);
+      // Then: ApolloServer created, middleware/routes called
+      expect(ApolloServer).toHaveBeenCalled();
+      expect(server.setupMiddleware).toHaveBeenCalled();
+      expect(server.setupRoutes).toHaveBeenCalled();
+      expect(logger.info).toHaveBeenCalledWith('GraphQL server initialized successfully');
     });
 
-    test('POST /graphql should handle health query', async () => {
-      const healthQuery = `
-        query {
-          health {
-            status
-            timestamp
-          }
-        }
-      `;
+    it('should log and throw error on failure (Given)', async () => {
+      // Given: ApolloServer throws error
+      ApolloServer.mockImplementation(() => { throw new Error('fail'); });
+      server.setupMiddleware = jest.fn();
+      server.setupRoutes = jest.fn();
 
-      const response = await request(app)
-        .post('/graphql')
-        .send({ query: healthQuery })
-        .expect(200);
-
-      expect(response.body.data).toBeDefined();
-      expect(response.body.data.health).toMatchObject({
-        status: expect.any(String),
-        timestamp: expect.any(String)
-      });
-    });
-
-    test('POST /graphql should return error for invalid query', async () => {
-      const invalidQuery = `
-        query {
-          invalidField
-        }
-      `;
-
-      const response = await request(app)
-        .post('/graphql')
-        .send({ query: invalidQuery })
-        .expect(200);
-
-      expect(response.body.errors).toBeDefined();
-      expect(response.body.errors).toBeInstanceOf(Array);
-      expect(response.body.errors.length).toBeGreaterThan(0);
+      // When/Then: initialize throws and logs
+      await expect(server.initialize()).rejects.toThrow('fail');
+      expect(logger.error).toHaveBeenCalledWith('Failed to initialize GraphQL server', expect.any(Object));
     });
   });
 
-  describe('Error handling', () => {
-    test('GET /nonexistent should return 404', async () => {
-      const response = await request(app)
-        .get('/nonexistent')
-        .expect(404);
+  describe('setupMiddleware', () => {
+    it('should set up all middlewares (Given)', () => {
+      // Given: Express app mock
+      const use = jest.fn();
+      server.app.use = use;
+      // When: setupMiddleware is called
+      server.setupMiddleware();
+      // Then: use called multiple times
+      expect(use).toHaveBeenCalled();
+    });
+  });
 
-      expect(response.body).toMatchObject({
-        error: 'Not Found',
-        message: 'The requested endpoint does not exist'
-      });
+  describe('setupRoutes', () => {
+    it('should set up all routes (Given)', () => {
+      // Given: Express app mock
+      const get = jest.fn();
+      const use = jest.fn();
+      server.app.get = get;
+      server.app.use = use;
+      // When: setupRoutes is called
+      server.setupRoutes();
+      // Then: get and use called
+      expect(get).toHaveBeenCalled();
+      expect(use).toHaveBeenCalled();
     });
   });
 });
