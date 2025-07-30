@@ -7,8 +7,6 @@ spring:
     mongodb:
       uri: mongodb://admin:password@localhost:27017/turknet-messaging-db?authSource=admin
       database: turknet-messaging-db
-  mvc:
-    throw-exception-if-no-handler-found: true
   web:
     resources:
       add-mappings: false
