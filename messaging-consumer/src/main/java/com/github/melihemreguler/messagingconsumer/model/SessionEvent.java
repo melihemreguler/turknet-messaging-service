@@ -23,7 +23,7 @@ public class SessionEvent {
     private String userId;
     
     @JsonProperty("expiresAt")
-    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSSSS")
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime expiresAt;
     
     @JsonProperty("ipAddress")
@@ -33,6 +33,6 @@ public class SessionEvent {
     private String userAgent;
     
     @JsonProperty("timestamp")
-    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSSSS")
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime timestamp;
 }
