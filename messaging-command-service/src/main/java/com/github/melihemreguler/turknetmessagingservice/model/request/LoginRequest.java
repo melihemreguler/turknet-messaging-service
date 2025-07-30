@@ -1,5 +1,6 @@
 package com.github.melihemreguler.turknetmessagingservice.model.request;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
@@ -18,6 +19,7 @@ public record LoginRequest(
         }
     }
     
+    @JsonIgnore
     public String getTrimmedUsername() {
         return username != null ? username.trim().toLowerCase() : null;
     }
