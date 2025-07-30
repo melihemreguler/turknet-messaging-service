@@ -90,14 +90,8 @@ npm start
 ### Testing
 
 ```bash
-# Run tests
-npm test
-
-# Run tests in watch mode
-npm run test:watch
-
-# Run with coverage
-npm test -- --coverage
+# Run tests with Jest config and detect open handles
+npx jest --config graphql-middleware/jest.config.js --detectOpenHandles
 ```
 
 ### Linting
@@ -330,18 +324,36 @@ services:
 ### Project Structure
 
 ```
-src/
-├── index.js              # Application entry point
-├── server.js             # Express + Apollo Server setup
-├── schema.js             # GraphQL schema definitions
-├── logger.js             # Winston logger configuration
-├── restApiClient.js      # REST API client with axios
-└── resolvers/
-    ├── index.js          # Resolver aggregation
-    ├── authResolvers.js  # Authentication resolvers
-    ├── messageResolvers.js # Message resolvers
-    ├── activityResolvers.js # Activity resolvers
-    └── healthResolvers.js   # Health check resolvers
+graphql-middleware/
+├── .env                    # Environment variables
+├── .env.example           # Environment variables template
+├── .eslintrc.js           # ESLint configuration
+├── .gitignore             # Git ignore patterns
+├── Dockerfile             # Docker container configuration
+├── jest.config.js         # Jest testing configuration
+├── package.json           # Node.js dependencies and scripts
+├── package-lock.json      # Dependency lock file
+├── README.md              # Project documentation
+├── QUERIES.md             # GraphQL query examples
+├── src/                   # Source code
+│   ├── index.js           # Application entry point
+│   ├── server.js          # Express + Apollo Server setup
+│   ├── schema.js          # GraphQL schema definitions
+│   ├── logger.js          # Winston logger configuration
+│   ├── restApiClient.js   # REST API client with axios
+│   └── resolvers/         # GraphQL resolvers
+│       ├── index.js           # Resolver aggregation
+│       ├── authResolvers.js   # Authentication resolvers
+│       ├── messageResolvers.js # Message resolvers
+│       ├── activityResolvers.js # Activity resolvers
+│       └── healthResolvers.js  # Health check resolvers
+└── tests/                 # Test files
+    ├── setup.js               # Test setup configuration
+    ├── server.test.js         # Server integration tests
+    ├── authResolvers.test.js  # Authentication resolver tests
+    ├── messageResolvers.test.js # Message resolver tests
+    ├── activityResolvers.test.js # Activity resolver tests
+    └── healthResolvers.test.js  # Health resolver tests
 ```
 
 ### Adding New Resolvers
@@ -351,7 +363,3 @@ src/
 3. Add REST API methods to `restApiClient.js`
 4. Import and merge in `src/resolvers/index.js`
 5. Add tests in `tests/`
-
-## License
-
-MIT License - see LICENSE file for details.
