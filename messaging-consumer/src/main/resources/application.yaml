@@ -156,9 +156,6 @@ app:
       user-commands-retry: turknet.transformers.user.commands.retry.prod.0
       session-commands: turknet.transformers.session.commands.prod.0
       session-commands-retry: turknet.transformers.session.commands.retry.prod.0
-    retry:
-      max-retry: 3
-      cron: "*/30 * * * *"
   elasticsearch:
     url: http://elasticsearch:9200
 
