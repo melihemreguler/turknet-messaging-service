@@ -178,6 +178,10 @@ cd graphql-middleware
 # Install dependencies
 npm install
 
+# Configure environment variables
+cp .env.example .env
+# Edit .env file with your configuration settings
+
 # Start in development mode
 npm run dev
 ```
