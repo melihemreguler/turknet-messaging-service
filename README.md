@@ -312,6 +312,8 @@ query GetMessageHistory($username: String!, $pagination: PaginationInput) {
   "updatedAt": "Date"
   // Additional fields can be added as needed
   // "isActive": "boolean"
+  // "blockedUsers": ["ObjectId"]  // Array of blocked user IDs
+
 }
 
 // messages collection  
