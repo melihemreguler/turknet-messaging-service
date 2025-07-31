@@ -61,7 +61,7 @@ This project is an enterprise-level messaging system built using **Event-Driven 
                                └─────────────────────────────────────┘
 ```
 
-## 📦 Project Structure
+## Project Structure
 
 ```
 turknet-messaging-service/
@@ -187,7 +187,7 @@ npm run dev
 | Service | URL | Description |
 |---------|-----|-------------|
 | **GraphQL Playground** | http://localhost:4000/graphql | GraphQL API Explorer |
-| **REST API Swagger** | http://localhost:8080/api/swagger-ui.html | REST API Documentation |
+| **REST API Swagger** | http://localhost:8080/api/swagger-ui/index.html | REST API Documentation |
 | **Consumer Health** | http://localhost:8081/actuator/health | Consumer Service Status |
 | **Kibana Dashboard** | http://localhost:5601 | Log Analysis & Monitoring |
 | **Kafka UI** | http://localhost:8082 | Kafka Topic Management |
