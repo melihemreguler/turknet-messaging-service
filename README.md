@@ -178,6 +178,10 @@ cd graphql-middleware
 # Install dependencies
 npm install
 
+# Configure environment variables
+cp .env.example .env
+# Edit .env file with your configuration settings
+
 # Start in development mode
 npm run dev
 ```
@@ -308,6 +312,8 @@ query GetMessageHistory($username: String!, $pagination: PaginationInput) {
   "updatedAt": "Date"
   // Additional fields can be added as needed
   // "isActive": "boolean"
+  // "blockedUsers": ["ObjectId"]  // Array of blocked user IDs
+
 }
 
 // messages collection  
