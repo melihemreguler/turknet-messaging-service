@@ -11,7 +11,6 @@ import java.util.Optional;
 
 @Repository
 public interface ActivityLogRepository extends MongoRepository<ActivityLogDto, String> {
-    Optional<ActivityLogDto> findByUserId(String userId);
     
     @Query(value = "{'userId': ?0}", fields = "{'logs': {$slice: [?1, ?2]}}")
     Optional<ActivityLogDto> findByUserIdWithPagination(String userId, int offset, int limit);

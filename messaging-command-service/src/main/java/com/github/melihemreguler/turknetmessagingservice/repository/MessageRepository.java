@@ -10,9 +10,7 @@ import java.util.List;
 
 @Repository
 public interface MessageRepository extends MongoRepository<MessageDto, String> {
-    
-    List<MessageDto> findByThreadIdOrderByTimestampAsc(String threadId);
-    
+
     Page<MessageDto> findByThreadIdOrderByTimestampAsc(String threadId, Pageable pageable);
     
     long countByThreadId(String threadId);

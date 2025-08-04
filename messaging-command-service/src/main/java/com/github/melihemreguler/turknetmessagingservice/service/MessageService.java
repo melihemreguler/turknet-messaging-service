@@ -33,7 +33,6 @@ public class MessageService {
         String recipient = request.getTrimmedRecipient();
         String content = request.getTrimmedContent();
 
-        // Get sender user info
         Optional<UserDto> senderUser = userRepository.findById(senderId);
         if (senderUser.isEmpty()) {
             throw UserNotFoundException.forSender(senderId);
@@ -47,7 +46,6 @@ public class MessageService {
         String senderUsername = senderUser.get().getUsername();
         String recipientUserId = recipientUser.get().getId();
 
-        // Create thread ID (sorted userIds to ensure consistency)
         String threadId = createThreadId(senderId, recipientUserId);
 
         MessageCommand messageCommand = MessageCommand.create(
@@ -61,24 +59,18 @@ public class MessageService {
     }
 
     public PaginatedResponse<MessageDto> getConversationPaginated(HistoryRequest request) {
-        // Resolve user1 ID
         String user1Id = resolveUserId(request.getUser1PrimaryId(), request.isUser1ByUserId());
 
-        // Resolve user2 ID  
         String user2Id = resolveUserId(request.getUser2PrimaryId(), request.isUser2ByUserId());
 
         String threadId = createThreadId(user1Id, user2Id);
 
-        // Create pageable object
         Pageable pageable = PageRequest.of(request.offset() / request.limit(), request.limit());
 
-        // Get paginated messages
         Page<MessageDto> messagePage = messageRepository.findByThreadIdOrderByTimestampAsc(threadId, pageable);
 
-        // Get total count
         long total = messageRepository.countByThreadId(threadId);
 
-        // If no messages found, log warning
         if (total == 0) {
             log.warn("No conversation found between users {} and {}", user1Id, user2Id);
             throw ThreadNotFoundException.forUsers(user1Id, user2Id);
@@ -100,21 +92,19 @@ public class MessageService {
     }
 
     private String resolveUserId(String identifier, boolean isUserId) {
-        if (isUserId) {
-            // Verify user exists by ID
-            Optional<UserDto> userOpt = userRepository.findById(identifier);
-            if (userOpt.isEmpty()) {
-                throw UserNotFoundException.forUserId(identifier);
-            }
-            return identifier;
-        } else {
-            // Find user by username
-            Optional<UserDto> userOpt = userRepository.findByUsername(identifier);
-            if (userOpt.isEmpty()) {
-                throw UserNotFoundException.forUsername(identifier);
-            }
-            return userOpt.get().getId();
-        }
+        return isUserId ? resolveUserIdById(identifier) : resolveUserIdByUsername(identifier);
+    }
+    
+    private String resolveUserIdById(String userId) {
+        return userRepository.findById(userId)
+            .map(UserDto::getId)
+            .orElseThrow(() -> UserNotFoundException.forUserId(userId));
+    }
+    
+    private String resolveUserIdByUsername(String username) {
+        return userRepository.findByUsername(username)
+            .map(UserDto::getId)
+            .orElseThrow(() -> UserNotFoundException.forUsername(username));
     }
 
     public record ConversationSecurityInfo(String user1Id, String user2Id) {
