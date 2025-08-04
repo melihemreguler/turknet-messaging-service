@@ -1,6 +1,7 @@
 package com.github.melihemreguler.turknetmessagingservice.service;
 
 import com.github.melihemreguler.turknetmessagingservice.dto.SessionDto;
+import com.github.melihemreguler.turknetmessagingservice.exception.SessionCleanupException;
 import com.github.melihemreguler.turknetmessagingservice.model.event.SessionEvent;
 import com.github.melihemreguler.turknetmessagingservice.repository.SessionRepository;
 import lombok.RequiredArgsConstructor;
@@ -32,12 +33,10 @@ public class SessionService {
     private int sessionCleanupIntervalMinutes;
     
     public String createSession(String userId, String username, String ipAddress, String userAgent) {
-        // Generate new session token
         String sessionToken = UUID.randomUUID().toString();
         String hashedSessionId = passwordEncoder.encode(sessionToken);
         LocalDateTime expiresAt = LocalDateTime.now().plusHours(sessionExpirationHours);
         
-        // Send upsert command to writer-service via Kafka
         SessionEvent sessionEvent = SessionEvent.createOrUpdate(
             hashedSessionId, userId, expiresAt, ipAddress, userAgent);
         
@@ -53,7 +52,6 @@ public class SessionService {
         }
         
         try {
-            // Find session by checking all sessions and matching the hashed token
             return sessionRepository.findAll().stream()
                 .filter(session -> !session.isExpired())
                 .filter(session -> passwordEncoder.matches(sessionId, session.getHashedSessionId()))
@@ -71,7 +69,6 @@ public class SessionService {
         }
         
         try {
-            // Find sessions only for the specific user and match the hashed token
             return sessionRepository.findByUserId(userId).stream()
                 .filter(session -> !session.isExpired())
                 .filter(session -> passwordEncoder.matches(sessionId, session.getHashedSessionId()))
@@ -103,7 +100,7 @@ public class SessionService {
                 log.info("Cleaned up {} expired sessions", expiredSessions.size());
             }
         } catch (Exception e) {
-            log.error("Error cleaning up expired sessions: {}", e.getMessage(), e);
+            throw new SessionCleanupException("Failed to cleanup expired sessions", e);
         }
     }
     

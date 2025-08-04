@@ -76,6 +76,13 @@ public class GlobalExceptionHandler {
                 .body(ApiResponse.error("Message delivery service temporarily unavailable"));
     }
 
+    @ExceptionHandler(SessionCleanupException.class)
+    public ResponseEntity<ApiResponse<Void>> handleSessionCleanupException(SessionCleanupException ex) {
+        log.error("Session cleanup error: {}", ex.getMessage(), ex);
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(ApiResponse.error("Session cleanup operation failed"));
+    }
+
     @ExceptionHandler(BaseTurknetMessagingException.class)
     public ResponseEntity<ApiResponse<Void>> handleBaseTurknetMessagingException(BaseTurknetMessagingException ex) {
         log.error("Turknet messaging error [{}]: {} (ErrorCode: {})", 
