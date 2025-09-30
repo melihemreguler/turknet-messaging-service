@@ -3,7 +3,7 @@ const logger = require('./logger');
 
 class RestApiClient {
   constructor() {
-    this.baseURL = process.env.REST_API_BASE_URL || 'http://localhost:8080';
+    this.baseURL = process.env.REST_API_BASE_URL || 'http://127.0.0.1:8080';
     this.timeout = parseInt(process.env.REST_API_TIMEOUT || '30000');
     
     this.client = axios.create({
@@ -12,7 +12,9 @@ class RestApiClient {
       headers: {
         'Content-Type': 'application/json',
         'User-Agent': 'GraphQL-Middleware/1.0.0'
-      }
+      },
+      // Force IPv4 to avoid ::1 (IPv6) connections
+      family: 4
     });
 
     this.setupInterceptors();
