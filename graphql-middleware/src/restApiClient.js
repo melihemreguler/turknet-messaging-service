@@ -148,6 +148,25 @@ class RestApiClient {
     }
   }
 
+  async getInbox(sessionId, userId, limit = 20, offset = 0) {
+    try {
+      const params = new URLSearchParams({
+        limit: limit.toString(),
+        offset: offset.toString()
+      });
+
+      const response = await this.client.get(`/api/messages/inbox?${params}`, {
+        headers: {
+          'X-Session-Id': sessionId,
+          'X-User-Id': userId
+        }
+      });
+      return response.data;
+    } catch (error) {
+      throw this.handleError(error, 'getInbox');
+    }
+  }
+
   // Activity endpoints
   async getActivityLogs(sessionId, userId, page = 0, size = 20) {
     try {

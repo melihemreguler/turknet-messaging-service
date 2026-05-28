@@ -57,6 +57,27 @@ const typeDefs = gql`
     offset: Int!
   }
 
+  # Inbox / conversation list types
+  type Conversation {
+    threadId: String!
+    otherUserId: String!
+    otherUsername: String!
+    lastMessage: MessageDto
+  }
+
+  type InboxPage {
+    data: [Conversation!]!
+    total: Int!
+    limit: Int!
+    offset: Int!
+  }
+
+  type InboxResponse {
+    success: Boolean!
+    message: String!
+    data: InboxPage
+  }
+
   # Activity types
   type ActivityLog {
     id: ID!
@@ -140,6 +161,9 @@ const typeDefs = gql`
       username: String!
       pagination: PaginationInput
     ): MessageHistoryResponse!
+
+    # Inbox / conversation list
+    getInbox(pagination: PaginationInput): InboxResponse!
 
     # Activity queries
     getMyActivityLogs(pagination: PaginationInput): ActivityResponse!

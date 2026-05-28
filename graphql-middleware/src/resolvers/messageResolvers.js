@@ -3,6 +3,31 @@ const logger = require('../logger');
 
 const messageResolvers = {
   Query: {
+    getInbox: async (_, { pagination }, { sessionId, userId }) => {
+      try {
+        if (!sessionId || !userId) {
+          throw new Error('Authentication required');
+        }
+
+        const limit = pagination?.size || 20;
+        const offset = (pagination?.page || 0) * limit;
+
+        logger.info('Get inbox request', { userId, limit, offset });
+
+        const result = await restApiClient.getInbox(sessionId, userId, limit, offset);
+
+        logger.info('Inbox retrieved successfully', {
+          userId,
+          total: result.data?.total || 0
+        });
+
+        return result;
+      } catch (error) {
+        logger.error('Get inbox failed', { userId, error: error.message });
+        throw error;
+      }
+    },
+
     getMessageHistory: async (_, { username, pagination }, { sessionId, userId }) => {
       try {
         if (!sessionId || !userId) {
