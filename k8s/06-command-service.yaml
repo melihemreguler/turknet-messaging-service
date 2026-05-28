@@ -1,0 +1,65 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: messaging-command-service
+  namespace: turknet
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: messaging-command-service
+  template:
+    metadata:
+      labels:
+        app: messaging-command-service
+    spec:
+      imagePullSecrets:
+        - name: ghcr-secret
+      initContainers:
+        - name: wait-for-kafka
+          image: busybox
+          command: ["sh", "-c", "until nc -z kafka 9092; do echo waiting for kafka; sleep 3; done"]
+        - name: wait-for-mongodb
+          image: busybox
+          command: ["sh", "-c", "until nc -z mongodb 27017; do echo waiting for mongodb; sleep 3; done"]
+      containers:
+        - name: messaging-command-service
+          image: ghcr.io/melihemreguler/messaging-command-service:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8080
+          env:
+            - name: SPRING_PROFILES_ACTIVE
+              value: "docker"
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "200m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+          readinessProbe:
+            httpGet:
+              path: /actuator/health/readiness
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: 8080
+            initialDelaySeconds: 60
+            periodSeconds: 15
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: messaging-command-service
+  namespace: turknet
+spec:
+  selector:
+    app: messaging-command-service
+  ports:
+    - port: 8080
+      targetPort: 8080
+  type: ClusterIP
