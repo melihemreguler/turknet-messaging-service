@@ -32,11 +32,10 @@ spec:
           image: mongo:8.0.12
           ports:
             - containerPort: 27017
+          envFrom:
+            - secretRef:
+                name: mongodb-credentials
           env:
-            - name: MONGO_INITDB_ROOT_USERNAME
-              value: "admin"
-            - name: MONGO_INITDB_ROOT_PASSWORD
-              value: "password"
             - name: MONGO_INITDB_DATABASE
               value: "turknet-messaging-db"
           volumeMounts:

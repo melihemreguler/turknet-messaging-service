@@ -1,5 +1,10 @@
 HELP.md
 target/
+
+# Kubernetes secrets — only the *.example.yaml templates are tracked
+k8s/*-secret.yaml
+!k8s/*-secret.example.yaml
+
 .mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
 !**/src/test/**/target/

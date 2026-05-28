@@ -448,6 +448,33 @@ export KAFKA_BOOTSTRAP_SERVERS=prod-kafka-cluster:9092
 export MONGODB_URI=mongodb://admin:password@mongodb:27017/turknet-messaging-db
 ```
 
+## Local Access to In-Cluster Services (Mongo / Kafka UI / Kibana)
+
+MongoDB, Kafka UI ve Kibana cluster içinde `ClusterIP` olarak çalışır; public bir Ingress ile **dışarı açılmaz**. Geliştirme/operasyon sırasında lokalden bağlanmak için `kubectl port-forward` kullanılır.
+
+```bash
+export KUBECONFIG=~/.kube/k3s-config
+./scripts/port-forward.sh
+```
+
+Script üç tüneli birden açar:
+
+| Servis      | Lokal endpoint |
+|-------------|----------------|
+| MongoDB     | `mongodb://<user>:<pass>@localhost:27017/?authSource=admin` |
+| Kafka UI    | http://localhost:8080 |
+| Kibana      | http://localhost:5601 |
+
+Mongo credentials artık `mongodb-credentials` Secret'ında tutulur. Cluster'a ilk kurulumda Secret üretmek için:
+
+```bash
+kubectl -n turknet create secret generic mongodb-credentials \
+  --from-literal=MONGO_INITDB_ROOT_USERNAME=admin \
+  --from-literal=MONGO_INITDB_ROOT_PASSWORD='<strong-password>'
+```
+
+Şablon için `k8s/examples/mongodb-secret.example.yaml` dosyasına bakın (gerçek değerlerle commit etmeyin). Bu dosya **bilerek** `k8s/examples/` altında tutulur — `kubectl apply -f k8s/` non-recursive çalışır, yani örnek manifest kazara cluster'a uygulanmaz.
+
 ## Event Flow Diagram
 
 ```
