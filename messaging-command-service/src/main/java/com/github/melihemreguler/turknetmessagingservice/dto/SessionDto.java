@@ -26,6 +26,7 @@ public class SessionDto {
 
     private LocalDateTime createdAt;
 
+    @Indexed(name = "expiresAt_ttl", expireAfterSeconds = 0)
     private LocalDateTime expiresAt;
 
     private String ipAddress;

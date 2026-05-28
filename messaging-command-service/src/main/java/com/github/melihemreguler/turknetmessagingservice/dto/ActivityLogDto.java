@@ -20,7 +20,7 @@ public class ActivityLogDto {
     @Id
     private String id;
 
-    @Indexed
+    @Indexed(unique = true, name = "userId_unique")
     private String userId;
 
     private List<ActivityEntry> logs = new ArrayList<>();

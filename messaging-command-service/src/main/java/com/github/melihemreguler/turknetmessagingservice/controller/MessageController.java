@@ -5,6 +5,7 @@ import com.github.melihemreguler.turknetmessagingservice.enums.SessionConstants;
 import com.github.melihemreguler.turknetmessagingservice.model.request.HistoryRequest;
 import com.github.melihemreguler.turknetmessagingservice.model.request.MessageRequest;
 import com.github.melihemreguler.turknetmessagingservice.model.response.ApiResponse;
+import com.github.melihemreguler.turknetmessagingservice.model.response.ConversationResponse;
 import com.github.melihemreguler.turknetmessagingservice.model.response.MessageResponse;
 import com.github.melihemreguler.turknetmessagingservice.model.response.PaginatedResponse;
 import com.github.melihemreguler.turknetmessagingservice.service.MessageService;
@@ -88,6 +89,24 @@ public class MessageController {
         return ResponseEntity.ok(ApiResponse.success("Conversation retrieved successfully", paginatedMessages));
     }
 
+
+    @GetMapping("/inbox")
+    public ResponseEntity<ApiResponse<PaginatedResponse<ConversationResponse>>> getInbox(
+            @RequestParam(defaultValue = "20") Integer limit,
+            @RequestParam(defaultValue = "0") Integer offset,
+            HttpServletRequest httpRequest) {
+
+        String currentUserId = (String) httpRequest.getAttribute(SessionConstants.USER_ID_ATTRIBUTE.toString());
+
+        int safeLimit = (limit == null || limit <= 0) ? 20 : Math.min(limit, 100);
+        int safeOffset = (offset == null || offset < 0) ? 0 : offset;
+
+        log.info("Fetching inbox for user {} (limit: {}, offset: {})", currentUserId, safeLimit, safeOffset);
+
+        PaginatedResponse<ConversationResponse> inbox = messageService.getInbox(currentUserId, safeLimit, safeOffset);
+
+        return ResponseEntity.ok(ApiResponse.success("Inbox retrieved successfully", inbox));
+    }
 
     private boolean isNullOrEmpty(String value) {
         return Objects.isNull(value) || value.trim().isEmpty();

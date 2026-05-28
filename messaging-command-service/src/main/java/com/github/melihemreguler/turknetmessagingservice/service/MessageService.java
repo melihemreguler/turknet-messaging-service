@@ -6,6 +6,7 @@ import com.github.melihemreguler.turknetmessagingservice.exception.UserNotFoundE
 import com.github.melihemreguler.turknetmessagingservice.exception.ThreadNotFoundException;
 import com.github.melihemreguler.turknetmessagingservice.model.request.HistoryRequest;
 import com.github.melihemreguler.turknetmessagingservice.model.request.MessageRequest;
+import com.github.melihemreguler.turknetmessagingservice.model.response.ConversationResponse;
 import com.github.melihemreguler.turknetmessagingservice.model.response.PaginatedResponse;
 import com.github.melihemreguler.turknetmessagingservice.model.event.MessageCommand;
 import com.github.melihemreguler.turknetmessagingservice.repository.MessageRepository;
@@ -19,6 +20,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -82,6 +84,46 @@ public class MessageService {
                 request.limit(),
                 request.offset()
         );
+    }
+
+    public PaginatedResponse<ConversationResponse> getInbox(String userId, int limit, int offset) {
+        long total = messageRepository.countThreadsForUser(userId);
+        if (total == 0) {
+            return PaginatedResponse.of(Collections.emptyList(), 0, limit, offset);
+        }
+
+        List<MessageDto> latestMessages = messageRepository.findLatestPerThreadForUser(userId, limit, offset);
+
+        // Resolve the "other" user for each thread; batch the username lookup.
+        Map<String, String> otherIdByThread = new LinkedHashMap<>();
+        for (MessageDto msg : latestMessages) {
+            otherIdByThread.put(msg.getThreadId(), resolveOtherUserId(msg.getThreadId(), userId));
+        }
+        Set<String> otherIds = new HashSet<>(otherIdByThread.values());
+        Map<String, String> usernameById = userRepository.findAllById(otherIds).stream()
+                .collect(Collectors.toMap(UserDto::getId, UserDto::getUsername));
+
+        List<ConversationResponse> conversations = latestMessages.stream()
+                .map(msg -> {
+                    String otherId = otherIdByThread.get(msg.getThreadId());
+                    return new ConversationResponse(
+                            msg.getThreadId(),
+                            otherId,
+                            usernameById.getOrDefault(otherId, "unknown"),
+                            msg
+                    );
+                })
+                .toList();
+
+        return PaginatedResponse.of(conversations, total, limit, offset);
+    }
+
+    private String resolveOtherUserId(String threadId, String selfId) {
+        int dash = threadId.indexOf('-');
+        if (dash < 0) return selfId;
+        String left = threadId.substring(0, dash);
+        String right = threadId.substring(dash + 1);
+        return left.equals(selfId) ? right : left;
     }
 
     public ConversationSecurityInfo getConversationSecurityInfo(HistoryRequest request) {

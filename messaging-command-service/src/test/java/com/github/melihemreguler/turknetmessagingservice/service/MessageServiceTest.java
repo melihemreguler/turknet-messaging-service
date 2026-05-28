@@ -6,6 +6,7 @@ import com.github.melihemreguler.turknetmessagingservice.exception.UserNotFoundE
 import com.github.melihemreguler.turknetmessagingservice.exception.ThreadNotFoundException;
 import com.github.melihemreguler.turknetmessagingservice.model.request.HistoryRequest;
 import com.github.melihemreguler.turknetmessagingservice.model.request.MessageRequest;
+import com.github.melihemreguler.turknetmessagingservice.model.response.ConversationResponse;
 import com.github.melihemreguler.turknetmessagingservice.model.response.PaginatedResponse;
 import com.github.melihemreguler.turknetmessagingservice.model.event.MessageCommand;
 import com.github.melihemreguler.turknetmessagingservice.repository.MessageRepository;
@@ -122,5 +123,75 @@ class MessageServiceTest {
 
         // When & Then
         assertThrows(ThreadNotFoundException.class, () -> messageService.getConversationPaginated(request));
+    }
+
+    @Test
+    void givenUserWithNoThreads_whenGetInbox_thenReturnsEmptyPage() {
+        // Given
+        String userId = "userA";
+        when(messageRepository.countThreadsForUser(userId)).thenReturn(0L);
+
+        // When
+        PaginatedResponse<ConversationResponse> result = messageService.getInbox(userId, 20, 0);
+
+        // Then
+        assertTrue(result.getData().isEmpty());
+        assertEquals(0, result.getTotal());
+        verify(messageRepository, never()).findLatestPerThreadForUser(any(), anyInt(), anyInt());
+    }
+
+    @Test
+    void givenUserWithThreads_whenGetInbox_thenResolvesOtherUsernameAndReturnsConversations() {
+        // Given
+        String userId = "userA";
+        // Two threads: userA-userB (other = userB) and userA-userC (other = userC)
+        MessageDto m1 = new MessageDto("userA-userB", "userB", "userB", "hi A");
+        MessageDto m2 = new MessageDto("userA-userC", "userA", "userA", "later");
+        when(messageRepository.countThreadsForUser(userId)).thenReturn(2L);
+        when(messageRepository.findLatestPerThreadForUser(userId, 20, 0))
+                .thenReturn(List.of(m1, m2));
+
+        UserDto b = new UserDto(); b.setId("userB"); b.setUsername("bob");
+        UserDto c = new UserDto(); c.setId("userC"); c.setUsername("carol");
+        when(userRepository.findAllById(argThat((Iterable<String> ids) -> {
+            java.util.Set<String> s = new java.util.HashSet<>();
+            ids.forEach(s::add);
+            return s.equals(java.util.Set.of("userB", "userC"));
+        }))).thenReturn(List.of(b, c));
+
+        // When
+        PaginatedResponse<ConversationResponse> result = messageService.getInbox(userId, 20, 0);
+
+        // Then
+        assertEquals(2, result.getTotal());
+        assertEquals(2, result.getData().size());
+        ConversationResponse first = result.getData().get(0);
+        assertEquals("userA-userB", first.getThreadId());
+        assertEquals("userB", first.getOtherUserId());
+        assertEquals("bob", first.getOtherUsername());
+        assertEquals(m1, first.getLastMessage());
+
+        ConversationResponse second = result.getData().get(1);
+        assertEquals("userC", second.getOtherUserId());
+        assertEquals("carol", second.getOtherUsername());
+    }
+
+    @Test
+    void givenMissingUserLookup_whenGetInbox_thenFallsBackToUnknownUsername() {
+        // Given
+        String userId = "userA";
+        MessageDto m = new MessageDto("userA-ghostX", "userA", "userA", "hello?");
+        when(messageRepository.countThreadsForUser(userId)).thenReturn(1L);
+        when(messageRepository.findLatestPerThreadForUser(userId, 20, 0)).thenReturn(List.of(m));
+        when(userRepository.findAllById(any(Iterable.class))).thenReturn(List.of());
+
+        // When
+        PaginatedResponse<ConversationResponse> result = messageService.getInbox(userId, 20, 0);
+
+        // Then
+        assertEquals(1, result.getData().size());
+        ConversationResponse conv = result.getData().get(0);
+        assertEquals("ghostX", conv.getOtherUserId());
+        assertEquals("unknown", conv.getOtherUsername());
     }
 }

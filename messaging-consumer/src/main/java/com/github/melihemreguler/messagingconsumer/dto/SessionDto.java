@@ -17,7 +17,8 @@ public class SessionDto {
     
     @Indexed
     private String userId;
-    
+
+    @Indexed(name = "expiresAt_ttl", expireAfterSeconds = 0)
     private LocalDateTime expiresAt;
     
     private LocalDateTime createdAt;
