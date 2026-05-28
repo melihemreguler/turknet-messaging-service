@@ -17,6 +17,8 @@ metadata:
   namespace: turknet
 spec:
   replicas: 1
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
       app: mongodb
@@ -55,6 +57,7 @@ spec:
                 - "db.adminCommand('ping')"
             initialDelaySeconds: 15
             periodSeconds: 10
+            timeoutSeconds: 10
       volumes:
         - name: mongodb-data
           persistentVolumeClaim:

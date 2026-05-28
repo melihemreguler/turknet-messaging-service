@@ -13,8 +13,6 @@ spec:
       labels:
         app: messaging-command-service
     spec:
-      imagePullSecrets:
-        - name: ghcr-secret
       initContainers:
         - name: wait-for-kafka
           image: busybox
