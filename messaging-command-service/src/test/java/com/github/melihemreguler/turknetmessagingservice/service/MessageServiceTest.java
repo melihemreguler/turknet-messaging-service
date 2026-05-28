@@ -96,7 +96,7 @@ class MessageServiceTest {
         MessageDto message = new MessageDto(threadId, "sender-id", "sender", "content");
         List<MessageDto> messages = List.of(message);
         org.springframework.data.domain.Page<MessageDto> page = new org.springframework.data.domain.PageImpl<>(messages);
-        when(messageRepository.findByThreadIdOrderByTimestampAsc(eq(threadId), any())).thenReturn(page);
+        when(messageRepository.findByThreadIdOrderByTimestampDesc(eq(threadId), any())).thenReturn(page);
         when(messageRepository.countByThreadId(threadId)).thenReturn((long) messages.size());
 
         // When
@@ -117,7 +117,7 @@ class MessageServiceTest {
         when(userRepository.findById("user1")).thenReturn(Optional.of(user1));
         when(userRepository.findById("user2")).thenReturn(Optional.of(user2));
         org.springframework.data.domain.Page<MessageDto> emptyPage = new org.springframework.data.domain.PageImpl<>(List.of());
-        when(messageRepository.findByThreadIdOrderByTimestampAsc(eq(threadId), any())).thenReturn(emptyPage);
+        when(messageRepository.findByThreadIdOrderByTimestampDesc(eq(threadId), any())).thenReturn(emptyPage);
         when(messageRepository.countByThreadId(threadId)).thenReturn(0L);
 
         // When & Then

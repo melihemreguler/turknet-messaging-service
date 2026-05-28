@@ -67,7 +67,7 @@ public class MessageService {
 
         Pageable pageable = PageRequest.of(request.offset() / request.limit(), request.limit());
 
-        Page<MessageDto> messagePage = messageRepository.findByThreadIdOrderByTimestampAsc(threadId, pageable);
+        Page<MessageDto> messagePage = messageRepository.findByThreadIdOrderByTimestampDesc(threadId, pageable);
 
         long total = messageRepository.countByThreadId(threadId);
 
