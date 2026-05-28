@@ -37,6 +37,31 @@ mutation SendMessage($input: SendMessageInput!) {
 }
 ''';
 
+const String kGetInboxQuery = r'''
+query GetInbox($pagination: PaginationInput) {
+  getInbox(pagination: $pagination) {
+    success
+    message
+    data {
+      total
+      data {
+        threadId
+        otherUserId
+        otherUsername
+        lastMessage {
+          id
+          threadId
+          senderId
+          senderUsername
+          content
+          timestamp
+        }
+      }
+    }
+  }
+}
+''';
+
 const String kGetMessageHistoryQuery = r'''
 query GetMessageHistory($username: String!, $pagination: PaginationInput) {
   getMessageHistory(username: $username, pagination: $pagination) {

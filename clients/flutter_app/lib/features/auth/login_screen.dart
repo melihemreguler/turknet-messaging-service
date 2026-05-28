@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/auth/auth_controller.dart';
+import '../../core/graphql/error_handler.dart';
+import '../../core/i18n/locale_controller.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -27,6 +29,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
+    final s = ref.read(stringsProvider);
     setState(() {
       _loading = true;
       _error = null;
@@ -38,60 +41,85 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     if (!mounted) return;
     setState(() => _loading = false);
     if (result.success) {
-      context.go('/home');
+      context.go('/inbox');
     } else {
-      setState(() => _error = result.message ?? 'Login failed');
+      final raw = result.message ?? s.loginFailed;
+      setState(() => _error = localizeServerMessage(raw, s));
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final s = ref.watch(stringsProvider);
     return Scaffold(
-      appBar: AppBar(title: const Text('Sign in')),
-      body: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              TextFormField(
-                controller: _username,
-                decoration: const InputDecoration(labelText: 'Username'),
-                validator: (v) =>
-                    (v == null || v.trim().isEmpty) ? 'Username required' : null,
-                autofillHints: const [AutofillHints.username],
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _password,
-                obscureText: true,
-                decoration: const InputDecoration(labelText: 'Password'),
-                validator: (v) =>
-                    (v == null || v.isEmpty) ? 'Password required' : null,
-                autofillHints: const [AutofillHints.password],
-              ),
-              const SizedBox(height: 24),
-              if (_error != null)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 12),
-                  child: Text(_error!, style: const TextStyle(color: Colors.red)),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(24),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const SizedBox(height: 32),
+                Icon(Icons.forum, size: 56, color: theme.colorScheme.primary),
+                const SizedBox(height: 16),
+                Text(s.loginWelcome,
+                    textAlign: TextAlign.center,
+                    style: theme.textTheme.headlineSmall
+                        ?.copyWith(fontWeight: FontWeight.w600)),
+                const SizedBox(height: 4),
+                Text(s.loginSubtitle,
+                    textAlign: TextAlign.center,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    )),
+                const SizedBox(height: 32),
+                TextFormField(
+                  controller: _username,
+                  decoration: InputDecoration(
+                    hintText: s.usernameHint,
+                    prefixIcon: const Icon(Icons.person_outline),
+                  ),
+                  validator: (v) =>
+                      (v == null || v.trim().isEmpty) ? s.usernameRequired : null,
+                  autofillHints: const [AutofillHints.username],
                 ),
-              FilledButton(
-                onPressed: _loading ? null : _submit,
-                child: _loading
-                    ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Text('Sign in'),
-              ),
-              TextButton(
-                onPressed: _loading ? null : () => context.go('/register'),
-                child: const Text("Don't have an account? Register"),
-              ),
-            ],
+                const SizedBox(height: 12),
+                TextFormField(
+                  controller: _password,
+                  obscureText: true,
+                  decoration: InputDecoration(
+                    hintText: s.passwordHint,
+                    prefixIcon: const Icon(Icons.lock_outline),
+                  ),
+                  validator: (v) =>
+                      (v == null || v.isEmpty) ? s.passwordRequired : null,
+                  autofillHints: const [AutofillHints.password],
+                ),
+                const SizedBox(height: 24),
+                if (_error != null)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: Text(_error!,
+                        style: TextStyle(color: theme.colorScheme.error)),
+                  ),
+                FilledButton(
+                  onPressed: _loading ? null : _submit,
+                  child: _loading
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : Text(s.signInButton),
+                ),
+                TextButton(
+                  onPressed: _loading ? null : () => context.go('/register'),
+                  child: Text(s.noAccountPrompt),
+                ),
+              ],
+            ),
           ),
         ),
       ),

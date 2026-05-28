@@ -1,14 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-class NewConversationScreen extends StatefulWidget {
+import '../../core/i18n/locale_controller.dart';
+
+class NewConversationScreen extends ConsumerStatefulWidget {
   const NewConversationScreen({super.key});
 
   @override
-  State<NewConversationScreen> createState() => _NewConversationScreenState();
+  ConsumerState<NewConversationScreen> createState() =>
+      _NewConversationScreenState();
 }
 
-class _NewConversationScreenState extends State<NewConversationScreen> {
+class _NewConversationScreenState extends ConsumerState<NewConversationScreen> {
   final _controller = TextEditingController();
   final _formKey = GlobalKey<FormState>();
 
@@ -24,35 +28,62 @@ class _NewConversationScreenState extends State<NewConversationScreen> {
     context.go('/thread/$target');
   }
 
+  void _back() {
+    if (context.canPop()) {
+      context.pop();
+    } else {
+      context.go('/inbox');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final s = ref.watch(stringsProvider);
     return Scaffold(
       appBar: AppBar(
-        title: const Text('New message'),
+        title: Text(s.newConversationTitle),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.go('/home'),
+          onPressed: _back,
         ),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              TextFormField(
-                controller: _controller,
-                decoration: const InputDecoration(
-                  labelText: 'Recipient username',
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                  s.to,
+                  style: theme.textTheme.labelLarge?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
                 ),
-                validator: (v) =>
-                    (v == null || v.trim().isEmpty) ? 'Username required' : null,
-                onFieldSubmitted: (_) => _open(),
-              ),
-              const SizedBox(height: 24),
-              FilledButton(onPressed: _open, child: const Text('Open chat')),
-            ],
+                const SizedBox(height: 8),
+                TextFormField(
+                  controller: _controller,
+                  autofocus: true,
+                  textInputAction: TextInputAction.go,
+                  decoration: InputDecoration(
+                    hintText: s.usernameHint,
+                    prefixIcon: const Icon(Icons.alternate_email),
+                  ),
+                  validator: (v) => (v == null || v.trim().isEmpty)
+                      ? s.usernameRequired
+                      : null,
+                  onFieldSubmitted: (_) => _open(),
+                ),
+                const SizedBox(height: 24),
+                FilledButton.icon(
+                  onPressed: _open,
+                  icon: const Icon(Icons.chat_outlined),
+                  label: Text(s.startChat),
+                ),
+              ],
+            ),
           ),
         ),
       ),

@@ -9,7 +9,9 @@ import '../../core/auth/auth_controller.dart';
 import '../../core/graphql/client.dart';
 import '../../core/graphql/error_handler.dart';
 import '../../core/graphql/operations.dart';
+import '../../core/i18n/locale_controller.dart';
 import '../../models/message.dart';
+import '../shared/user_avatar.dart';
 import 'message_bubble.dart';
 
 const int _pageSize = 50;
@@ -124,8 +126,10 @@ class _ThreadScreenState extends ConsumerState<ThreadScreen>
           return;
         }
         if (!silent) {
+          final s = ref.read(stringsProvider);
           setState(() {
-            _error = extractErrorMessage(result.exception, fallback: 'Failed to load messages');
+            _error = extractErrorMessage(result.exception,
+                fallback: s.loadMessagesFailed, strings: s);
             _loading = false;
           });
         }
@@ -215,8 +219,11 @@ class _ThreadScreenState extends ConsumerState<ThreadScreen>
     if (result.hasException) {
       if (await _handleAuthFailure(result.exception)) return;
       if (!mounted) return;
+      final s = ref.read(stringsProvider);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(extractErrorMessage(result.exception, fallback: 'Send failed'))),
+        SnackBar(
+            content: Text(extractErrorMessage(result.exception,
+                fallback: s.sendFailed, strings: s))),
       );
       return;
     }
@@ -228,12 +235,32 @@ class _ThreadScreenState extends ConsumerState<ThreadScreen>
   Widget build(BuildContext context) {
     final session = ref.watch(authControllerProvider).session;
     final myId = session?.userId;
+    final s = ref.watch(stringsProvider);
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.otherUsername),
+        titleSpacing: 0,
+        title: Row(
+          children: [
+            UserAvatar(username: widget.otherUsername, size: 36),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                widget.otherUsername,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
+        ),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.go('/home'),
+          onPressed: () {
+            if (context.canPop()) {
+              context.pop();
+            } else {
+              context.go('/inbox');
+            }
+          },
         ),
       ),
       body: Column(
@@ -249,7 +276,7 @@ class _ThreadScreenState extends ConsumerState<ThreadScreen>
             child: _loading
                 ? const Center(child: CircularProgressIndicator())
                 : _messages.isEmpty
-                    ? const Center(child: Text('No messages yet'))
+                    ? Center(child: Text(s.noMessagesYet))
                     : ListView.builder(
                         controller: _scrollController,
                         reverse: true,
@@ -279,30 +306,51 @@ class _ThreadScreenState extends ConsumerState<ThreadScreen>
           ),
           SafeArea(
             top: false,
-            child: Padding(
-              padding: const EdgeInsets.all(8),
+            child: Container(
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.surface,
+                border: Border(
+                  top: BorderSide(
+                    color: Theme.of(context).dividerTheme.color ??
+                        Theme.of(context).dividerColor,
+                  ),
+                ),
+              ),
+              padding: const EdgeInsets.fromLTRB(12, 8, 8, 8),
               child: Row(
+                crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   Expanded(
                     child: TextField(
                       controller: _composeController,
-                      decoration: const InputDecoration(
-                        hintText: 'Message',
-                        border: OutlineInputBorder(),
+                      minLines: 1,
+                      maxLines: 5,
+                      textInputAction: TextInputAction.send,
+                      decoration: InputDecoration(
+                        hintText: s.typeMessage,
                         isDense: true,
                       ),
                       onSubmitted: (_) => _send(),
                     ),
                   ),
-                  IconButton(
-                    icon: _sending
+                  const SizedBox(width: 8),
+                  FilledButton(
+                    onPressed: _sending ? null : _send,
+                    style: FilledButton.styleFrom(
+                      shape: const CircleBorder(),
+                      padding: const EdgeInsets.all(14),
+                      minimumSize: const Size(48, 48),
+                    ),
+                    child: _sending
                         ? const SizedBox(
                             width: 18,
                             height: 18,
-                            child: CircularProgressIndicator(strokeWidth: 2),
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
                           )
-                        : const Icon(Icons.send),
-                    onPressed: _sending ? null : _send,
+                        : const Icon(Icons.send, size: 20),
                   ),
                 ],
               ),
