@@ -39,3 +39,7 @@ build/
 
 ### Mac ###
 .DS_Store
+
+### LLMs ###
+CLAUDE.md
+plans/
