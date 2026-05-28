@@ -13,8 +13,6 @@ spec:
       labels:
         app: graphql-middleware
     spec:
-      imagePullSecrets:
-        - name: ghcr-secret
       initContainers:
         - name: wait-for-command-service
           image: busybox
@@ -98,10 +96,10 @@ metadata:
 spec:
   tls:
     - hosts:
-        - turknet.melihemre.dev
-      secretName: turknet-melihemre-dev-tls
+        - messaging.melihemre.dev
+      secretName: messaging-melihemre-dev-tls
   rules:
-    - host: turknet.melihemre.dev
+    - host: messaging.melihemre.dev
       http:
         paths:
           - path: /
