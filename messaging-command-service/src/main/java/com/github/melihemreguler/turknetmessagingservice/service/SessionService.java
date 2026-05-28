@@ -1,7 +1,6 @@
 package com.github.melihemreguler.turknetmessagingservice.service;
 
 import com.github.melihemreguler.turknetmessagingservice.dto.SessionDto;
-import com.github.melihemreguler.turknetmessagingservice.exception.SessionCleanupException;
 import com.github.melihemreguler.turknetmessagingservice.model.event.SessionEvent;
 import com.github.melihemreguler.turknetmessagingservice.repository.SessionRepository;
 import lombok.RequiredArgsConstructor;
@@ -100,7 +99,7 @@ public class SessionService {
                 log.info("Cleaned up {} expired sessions", expiredSessions.size());
             }
         } catch (Exception e) {
-            throw new SessionCleanupException("Failed to cleanup expired sessions", e);
+            log.error("Failed to cleanup expired sessions: {}", e.getMessage(), e);
         }
     }
     
