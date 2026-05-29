@@ -1,3 +1,15 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: zookeeper-pvc
+  namespace: turknet
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 2Gi
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -5,6 +17,8 @@ metadata:
   namespace: turknet
 spec:
   replicas: 1
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
       app: zookeeper
@@ -18,6 +32,14 @@ spec:
           image: debezium/zookeeper:2.4
           ports:
             - containerPort: 2181
+          env:
+            - name: ZOOKEEPER_DATA_DIR
+              value: /zookeeper/data
+            - name: ZOOKEEPER_LOG_DIR
+              value: /zookeeper/logs
+          volumeMounts:
+            - name: zookeeper-data
+              mountPath: /zookeeper/data
           resources:
             requests:
               memory: "256Mi"
@@ -30,6 +52,10 @@ spec:
               port: 2181
             initialDelaySeconds: 10
             periodSeconds: 10
+      volumes:
+        - name: zookeeper-data
+          persistentVolumeClaim:
+            claimName: zookeeper-pvc
 ---
 apiVersion: v1
 kind: Service
