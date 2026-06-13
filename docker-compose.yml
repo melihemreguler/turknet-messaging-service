@@ -26,7 +26,7 @@ services:
 
   kafka-ui:
     image: provectuslabs/kafka-ui:latest
-    restart: always
+    restart: "no"
     depends_on:
       - kafka
     ports:
@@ -61,7 +61,7 @@ services:
   mongodb:
     image: mongo:8.0.12
     container_name: mongodb
-    restart: always
+    restart: "no"
     ports:
       - "27017:27017"
     environment:
@@ -75,7 +75,7 @@ services:
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:8.11.0
     container_name: elasticsearch
-    restart: always
+    restart: "no"
     ports:
       - "9200:9200"
       - "9300:9300"
@@ -97,7 +97,7 @@ services:
   kibana:
     image: docker.elastic.co/kibana/kibana:8.11.0
     container_name: kibana
-    restart: always
+    restart: "no"
     ports:
       - "5601:5601"
     environment:
@@ -153,62 +153,62 @@ services:
         echo 'Index patterns created successfully!'
     restart: "no"
 
-  messaging-command-service:
-    image: messaging-command-service:latest
-    depends_on:
-      - kafka
-      - mongodb
-      - elasticsearch
-      - kafka-create-topics
-    ports:
-      - "8080:8080"
-    environment:
-      - SPRING_PROFILES_ACTIVE=docker
-    restart: unless-stopped
-
-  messaging-consumer:
-    image: messaging-consumer:latest
-    depends_on:
-      - kafka
-      - mongodb
-      - elasticsearch
-      - kafka-create-topics
-    ports:
-      - "8081:8081"
-    environment:
-      - SPRING_PROFILES_ACTIVE=docker
-    restart: unless-stopped
-
-  graphql-middleware:
-    build:
-      context: ./graphql-middleware
-      dockerfile: Dockerfile
-    depends_on:
-      - messaging-command-service
-      - elasticsearch
-    ports:
-      - "4000:4000"
-    environment:
-      - NODE_ENV=production
-      - PORT=4000
-      - REST_API_BASE_URL=http://messaging-command-service:8080
-      - REST_API_TIMEOUT=30000
-      - LOG_LEVEL=info
-      - LOG_FORMAT=json
-      - CORS_ORIGIN=*
-      - CORS_CREDENTIALS=true
-      - GRAPHQL_PLAYGROUND=true
-      - GRAPHQL_INTROSPECTION=true
-      - GRAPHQL_DEBUG=false
-      - ELASTICSEARCH_ENABLED=true
-      - ELASTICSEARCH_URL=http://elasticsearch:9200
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "node", "-e", "require('http').get('http://localhost:4000/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) }).on('error', () => { process.exit(1) })"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
+#  messaging-command-service:
+#    image: messaging-command-service:latest
+#    depends_on:
+#      - kafka
+#      - mongodb
+#      - elasticsearch
+#      - kafka-create-topics
+#    ports:
+#      - "8080:8080"
+#    environment:
+#      - SPRING_PROFILES_ACTIVE=docker
+#    restart: unless-stopped
+#
+#  messaging-consumer:
+#    image: messaging-consumer:latest
+#    depends_on:
+#      - kafka
+#      - mongodb
+#      - elasticsearch
+#      - kafka-create-topics
+#    ports:
+#      - "8081:8081"
+#    environment:
+#      - SPRING_PROFILES_ACTIVE=docker
+#    restart: unless-stopped
+#
+#  graphql-middleware:
+#    build:
+#      context: ./graphql-middleware
+#      dockerfile: Dockerfile
+#    depends_on:
+#      - messaging-command-service
+#      - elasticsearch
+#    ports:
+#      - "4000:4000"
+#    environment:
+#      - NODE_ENV=production
+#      - PORT=4000
+#      - REST_API_BASE_URL=http://messaging-command-service:8080
+#      - REST_API_TIMEOUT=30000
+#      - LOG_LEVEL=info
+#      - LOG_FORMAT=json
+#      - CORS_ORIGIN=*
+#      - CORS_CREDENTIALS=true
+#      - GRAPHQL_PLAYGROUND=true
+#      - GRAPHQL_INTROSPECTION=true
+#      - GRAPHQL_DEBUG=false
+#      - ELASTICSEARCH_ENABLED=true
+#      - ELASTICSEARCH_URL=http://elasticsearch:9200
+#    restart: unless-stopped
+#    healthcheck:
+#      test: ["CMD", "node", "-e", "require('http').get('http://localhost:4000/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) }).on('error', () => { process.exit(1) })"]
+#      interval: 30s
+#      timeout: 10s
+#      retries: 3
+#      start_period: 40s
 
 volumes:
   mongodb-data:
