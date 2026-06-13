@@ -1,0 +1,27 @@
+# Restrict who can reach Elasticsearch (port 9200). Selecting the ES pod with
+# an ingress policy makes all other ingress default-deny, so only pods in the
+# turknet namespace (graphql-middleware, consumer, command-service, kibana) and
+# the logging namespace (fluent-bit) can talk to it. Enforced by k3s' built-in
+# kube-router network-policy controller.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: elasticsearch-allow-clients
+  namespace: turknet
+spec:
+  podSelector:
+    matchLabels:
+      app: elasticsearch
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: turknet
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: logging
+      ports:
+        - protocol: TCP
+          port: 9200
