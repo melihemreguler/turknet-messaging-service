@@ -19,15 +19,25 @@ public class ElasticsearchAppender extends AppenderBase<ILoggingEvent> {
 
     @Setter
     private String indexName;
-    
+
+    @Setter
+    private String username;
+
+    @Setter
+    private String password;
+
     private WebClient webClient;
 
     @Override
     public void start() {
         super.start();
-        this.webClient = WebClient.builder()
-                .baseUrl(elasticsearchUrl)
-                .build();
+        WebClient.Builder builder = WebClient.builder().baseUrl(elasticsearchUrl);
+        // Send HTTP basic auth when credentials are configured (Elasticsearch
+        // security enabled); stays anonymous when they're blank.
+        if (username != null && !username.isBlank()) {
+            builder.defaultHeaders(headers -> headers.setBasicAuth(username, password));
+        }
+        this.webClient = builder.build();
     }
 
     @Override

@@ -55,6 +55,8 @@
         <appender name="ELASTICSEARCH" class="com.github.melihemreguler.turknetmessagingservice.logging.ElasticsearchAppender">
             <elasticsearchUrl>http://elasticsearch:9200</elasticsearchUrl>
             <indexName>turknet-messaging-logs</indexName>
+            <username>${ELASTICSEARCH_USERNAME:-}</username>
+            <password>${ELASTICSEARCH_PASSWORD:-}</password>
         </appender>
         
         <root level="INFO">
@@ -73,6 +75,8 @@
         <appender name="ELASTICSEARCH" class="com.github.melihemreguler.turknetmessagingservice.logging.ElasticsearchAppender">
             <elasticsearchUrl>http://elasticsearch:9200</elasticsearchUrl>
             <indexName>turknet-messaging-logs</indexName>
+            <username>${ELASTICSEARCH_USERNAME:-}</username>
+            <password>${ELASTICSEARCH_PASSWORD:-}</password>
         </appender>
         
         <root level="INFO">
@@ -91,6 +95,8 @@
         <appender name="ELASTICSEARCH" class="com.github.melihemreguler.turknetmessagingservice.logging.ElasticsearchAppender">
             <elasticsearchUrl>http://elasticsearch:9200</elasticsearchUrl>
             <indexName>turknet-messaging-logs</indexName>
+            <username>${ELASTICSEARCH_USERNAME:-}</username>
+            <password>${ELASTICSEARCH_PASSWORD:-}</password>
         </appender>
         
         <root level="WARN">

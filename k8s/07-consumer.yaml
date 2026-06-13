@@ -34,6 +34,14 @@ spec:
                 secretKeyRef:
                   name: mongodb-credentials
                   key: SPRING_DATA_MONGODB_URI
+            # Elasticsearch basic-auth for the logback ES appender.
+            - name: ELASTICSEARCH_USERNAME
+              value: "log_writer"
+            - name: ELASTICSEARCH_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: elasticsearch-credentials
+                  key: LOG_WRITER_PASSWORD
           resources:
             requests:
               memory: "256Mi"
