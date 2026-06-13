@@ -48,8 +48,14 @@ spec:
               value: "false"
             - name: ELASTICSEARCH_ENABLED
               value: "true"
+            # ES security is on. The @elastic client honours credentials embedded
+            # in the node URL, so no code change is needed -- the full
+            # http://log_writer:<pass>@elasticsearch:9200 URL comes from a Secret.
             - name: ELASTICSEARCH_URL
-              value: "http://elasticsearch:9200"
+              valueFrom:
+                secretKeyRef:
+                  name: elasticsearch-credentials
+                  key: ELASTICSEARCH_URL_AUTH
           resources:
             requests:
               memory: "128Mi"

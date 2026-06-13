@@ -21,6 +21,14 @@ spec:
           env:
             - name: ELASTICSEARCH_HOSTS
               value: "http://elasticsearch:9200"
+            # ES security is on: authenticate as the built-in kibana_system user.
+            - name: ELASTICSEARCH_USERNAME
+              value: "kibana_system"
+            - name: ELASTICSEARCH_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: elasticsearch-credentials
+                  key: KIBANA_SYSTEM_PASSWORD
             - name: SERVER_NAME
               value: "kibana"
             - name: SERVER_HOST

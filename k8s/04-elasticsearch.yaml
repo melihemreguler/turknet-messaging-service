@@ -42,10 +42,22 @@ spec:
           env:
             - name: discovery.type
               value: "single-node"
+            # Authentication is ON; HTTP TLS stays off (traffic is in-cluster and
+            # now also restricted by NetworkPolicy). single-node discovery means
+            # transport TLS is not required.
             - name: xpack.security.enabled
-              value: "false"
+              value: "true"
             - name: xpack.security.enrollment.enabled
               value: "false"
+            - name: xpack.security.http.ssl.enabled
+              value: "false"
+            # Bootstraps the built-in 'elastic' superuser password on first start
+            # with security enabled.
+            - name: ELASTIC_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: elasticsearch-credentials
+                  key: ELASTIC_PASSWORD
             - name: cluster.name
               value: "turknet-messaging-cluster"
             - name: node.name
@@ -64,9 +76,10 @@ spec:
             limits:
               memory: "1.5Gi"
               cpu: "1000m"
+          # With security enabled, /_cluster/health returns 401 without creds, so
+          # an httpGet probe would fail. A TCP check just confirms ES is listening.
           readinessProbe:
-            httpGet:
-              path: /_cluster/health
+            tcpSocket:
               port: 9200
             initialDelaySeconds: 30
             periodSeconds: 10
