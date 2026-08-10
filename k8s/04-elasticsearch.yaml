@@ -17,8 +17,6 @@ metadata:
   namespace: turknet
 spec:
   replicas: 1
-  strategy:
-    type: Recreate
   selector:
     matchLabels:
       app: elasticsearch
@@ -27,12 +25,14 @@ spec:
       labels:
         app: elasticsearch
     spec:
-      initContainers:
-        - name: set-vm-max-map-count
-          image: busybox
-          command: ["sysctl", "-w", "vm.max_map_count=262144"]
-          securityContext:
-            privileged: true
+      # The privileged `set-vm-max-map-count` initContainer that used to live
+      # here was removed on 2026-08-10. It ran with full host privileges from an
+      # untagged (= mutable) public busybox image, which made it a direct route
+      # to root on the node -- and this node's disk holds the Vaultwarden
+      # database. It was also never needed: Ubuntu 24.04 already ships
+      # vm.max_map_count=1048576 via /etc/sysctl.d/10-map-count.conf, four times
+      # what Elasticsearch asks for. Verify with `sysctl vm.max_map_count`
+      # before deploying to a different host.
       containers:
         - name: elasticsearch
           image: docker.elastic.co/elasticsearch/elasticsearch:8.11.0
@@ -42,22 +42,14 @@ spec:
           env:
             - name: discovery.type
               value: "single-node"
-            # Authentication is ON; HTTP TLS stays off (traffic is in-cluster and
-            # now also restricted by NetworkPolicy). single-node discovery means
-            # transport TLS is not required.
+            # Security is ENABLED on the live cluster. This file said "false"
+            # until 2026-08-10, so applying it would have silently switched
+            # Elasticsearch authentication off and made the credentials handed
+            # to Fluent Bit and the messaging services meaningless.
             - name: xpack.security.enabled
               value: "true"
             - name: xpack.security.enrollment.enabled
               value: "false"
-            - name: xpack.security.http.ssl.enabled
-              value: "false"
-            # Bootstraps the built-in 'elastic' superuser password on first start
-            # with security enabled.
-            - name: ELASTIC_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: elasticsearch-credentials
-                  key: ELASTIC_PASSWORD
             - name: cluster.name
               value: "turknet-messaging-cluster"
             - name: node.name
@@ -76,10 +68,9 @@ spec:
             limits:
               memory: "1.5Gi"
               cpu: "1000m"
-          # With security enabled, /_cluster/health returns 401 without creds, so
-          # an httpGet probe would fail. A TCP check just confirms ES is listening.
           readinessProbe:
-            tcpSocket:
+            httpGet:
+              path: /_cluster/health
               port: 9200
             initialDelaySeconds: 30
             periodSeconds: 10
